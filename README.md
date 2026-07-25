@@ -8,6 +8,7 @@
    ```
 3. ضع الملفات التالية في نفس المجلد: `app.py`, `db.py`, `helpers.py`, `style.py`, `school_data.db`
 4. شغّل التطبيق:
+ & C:\Users\hp\AppData\Local\Programs\Python\Python313\python.exe -m streamlit run c:/Users/hp/Desktop/files/app.py 
    ```
    streamlit run app.py
    ```
