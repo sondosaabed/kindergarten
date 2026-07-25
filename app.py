@@ -13,12 +13,21 @@ import streamlit as st
 from db import init_db, get_connection
 from style import CSS
 import helpers as H
+import auth
+
+import os
+
+LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")
 
 # --------------------------------------------------------------------------
 # Setup
 # --------------------------------------------------------------------------
-st.set_page_config(page_title="نظام إدارة الروضة", page_icon="🏫", layout="wide")
+st.set_page_config(page_title="روضة مؤسسة شباب البيرة", page_icon=LOGO_PATH, layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
+
+if not auth.check_authentication():
+    st.stop()
+
 init_db()
 conn = get_connection()
 
@@ -33,7 +42,7 @@ def section_header(icon, title, subtitle=""):
         st.markdown(f"<div class='section-sub'>{subtitle}</div>", unsafe_allow_html=True)
 
 
-def kpi(col, icon, label, value, bg="#EEF0FF", fg="#5B5FEF"):
+def kpi(col, icon, label, value, bg="#E9F5EC", fg="#219044"):
     with col:
         st.markdown(f"""
         <div class="kpi-card">
@@ -58,10 +67,14 @@ def confirm_delete(key, label="أوافق على الحذف نهائياً"):
 # Sidebar navigation
 # --------------------------------------------------------------------------
 with st.sidebar:
+    _, logo_col, _ = st.columns([1, 2, 1])
+    with logo_col:
+        if os.path.exists(LOGO_PATH):
+            st.image(LOGO_PATH, use_container_width=True)
     st.markdown("""
-    <div class="brand-box">
-        <h2>🏫 روضتي</h2>
-        <p>نظام إدارة الروضة والمدرسة</p>
+    <div class="brand-box" style="border-top:none;">
+        <h2 style="font-size:19px;">روضة مؤسسة شباب البيرة</h2>
+        <p>Al-Bireh Youth Foundation Kindergarten</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -92,6 +105,10 @@ with st.sidebar:
     )
     st.markdown("<div style='opacity:.6; font-size:12px; margin-top:20px;'>صُنع بـ ❤️ لأجل روضتنا</div>", unsafe_allow_html=True)
 
+    st.markdown("<div style='margin-top:18px;'></div>", unsafe_allow_html=True)
+    if st.button("🚪 تسجيل الخروج", use_container_width=True):
+        auth.logout()
+
 
 # ==========================================================================
 # 1. DASHBOARD
@@ -106,11 +123,11 @@ def page_dashboard():
     pending = df(f"SELECT COUNT(*) c FROM registrations WHERE status = '{H.STATUS_NEW}'").iloc[0]['c']
 
     c1, c2, c3, c4, c5 = st.columns(5)
-    kpi(c1, "🎒", "إجمالي الطلاب", total_students, "#EEF0FF", "#5B5FEF")
-    kpi(c2, "👩‍🏫", "المعلمون", total_teachers, "#FFF4E0", "#E8930C")
-    kpi(c3, "🏷️", "الصفوف", total_classes, "#E9FBF3", "#12B886")
-    kpi(c4, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), "#FDECEF", "#E5486D")
-    kpi(c5, "⏳", "بانتظار رسوم التسجيل", pending, "#FFF0F0", "#E5484D")
+    kpi(c1, "🎒", "إجمالي الطلاب", total_students, "#E9F5EC", "#219044")
+    kpi(c2, "👩‍🏫", "المعلمون", total_teachers, "#FBF3E3", "#D7A431")
+    kpi(c3, "🏷️", "الصفوف", total_classes, "#E9F5EC", "#163D22")
+    kpi(c4, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), "#FDECEC", "#E62031")
+    kpi(c5, "⏳", "بانتظار رسوم التسجيل", pending, "#FBF3E3", "#B4790C")
 
     st.write("")
     left, right = st.columns([1.3, 1])
@@ -783,7 +800,7 @@ def page_payments():
 
             st.markdown(f"""
             <div class="receipt-box">
-                <h3>🧾 وصل استلام نقدية — روضتي</h3>
+                <h3>🧾 وصل استلام نقدية — روضة مؤسسة شباب البيرة</h3>
                 <div class="receipt-row"><span>رقم الوصل</span><b>#{receipt_id}</b></div>
                 <div class="receipt-row"><span>التاريخ</span><b>{today}</b></div>
                 <div class="receipt-row"><span>اسم الطالب</span><b>{selected_row['student_name']}</b></div>

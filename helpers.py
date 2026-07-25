@@ -29,8 +29,8 @@ STATUS_NEW = "مسجل جديد"
 STATUS_ACTIVE = "منتظم"
 
 STATUS_COLORS = {
-    STATUS_NEW: "#FFB84D",     # amber — waiting on registration fee
-    STATUS_ACTIVE: "#4CAF7D",  # green — active / paid
+    STATUS_NEW: "#D7A431",     # gold — waiting on registration fee
+    STATUS_ACTIVE: "#219044",  # brand green — active / paid
 }
 
 

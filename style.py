@@ -3,16 +3,16 @@
 CSS = """
 <style>
 :root{
-    --primary:#5B5FEF;
-    --primary-dark:#4347C4;
-    --pink:#FF8FAB;
-    --yellow:#FFC94D;
-    --mint:#12B886;
-    --bg:#F5F6FB;
+    --primary:#219044;
+    --primary-dark:#163D22;
+    --pink:#E62031;
+    --yellow:#D7A431;
+    --mint:#219044;
+    --bg:#FAF9F5;
     --card:#FFFFFF;
-    --text:#2B2A4A;
-    --muted:#8A8AA3;
-    --border:#ECEDF7;
+    --text:#1F2A22;
+    --muted:#7C8A7E;
+    --border:#EAF0E9;
 }
 
 html, body, [class*="css"] {
@@ -129,6 +129,78 @@ div[data-testid="stForm"]{
     border-radius:16px;
     padding: 18px 20px 6px 20px;
     border: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------- */
+/* Mobile responsiveness                                            */
+/* ---------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .block-container{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-top: 1.2rem !important;
+    }
+
+    .section-title{ font-size: 21px; gap:8px; }
+    .section-sub{ font-size: 13px; margin-bottom: 12px; }
+
+    .kpi-card{
+        padding: 12px 14px;
+        border-radius: 12px;
+        gap: 10px;
+    }
+    .kpi-icon{ width:38px; height:38px; font-size:18px; border-radius:10px; }
+    .kpi-value{ font-size: 18px; }
+    .kpi-label{ font-size: 12px; }
+
+    .card{ padding: 14px 14px; border-radius: 12px; }
+
+    div[data-testid="stForm"]{ padding: 14px 14px 2px 14px; border-radius: 12px; }
+
+    .receipt-box{ padding: 16px 16px; font-size: 13.5px; }
+    .receipt-row{ flex-direction: row; flex-wrap: wrap; gap: 2px; }
+
+    .brand-box h2{ font-size: 17px; }
+    .brand-box p{ font-size: 11px; }
+    .sidebar-stat{ font-size: 12px; padding: 7px 10px; }
+    .sidebar-stat b{ font-size: 14px; }
+
+    /* Bigger, full-width, easy-to-tap buttons */
+    .stButton>button,
+    div[data-testid="stFormSubmitButton"] button{
+        width: 100%;
+        min-height: 46px;
+        font-size: 15px;
+    }
+
+    /* Inputs: comfortable tap height, no iOS zoom-in on focus */
+    input, textarea, select,
+    div[data-baseweb="select"] > div{
+        font-size: 16px !important;
+        min-height: 42px;
+    }
+
+    section[data-testid="stSidebar"] div[role="radiogroup"] label{
+        padding: 12px 14px;
+        font-size: 14.5px;
+    }
+
+    h1 { font-size: 24px !important; }
+    h2 { font-size: 20px !important; }
+    h3 { font-size: 17px !important; }
+
+    /* Let wide tables scroll horizontally instead of squeezing/breaking */
+    div[data-testid="stDataFrame"]{
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-value{ font-size: 16px; }
+    .section-title{ font-size: 19px; }
+    div[data-testid="column"]{
+        min-width: 100% !important;
+    }
 }
 </style>
 """
