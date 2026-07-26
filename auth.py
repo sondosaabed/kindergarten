@@ -113,7 +113,7 @@ def check_authentication():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
         # Render logo inside the wrapper
-        ui.render_logo(width=100, center=True, drop_shadow=False)
+        ui.render_logo(width=300, center=True, drop_shadow=False)
 
         # Integrated Header
         st.markdown("""
