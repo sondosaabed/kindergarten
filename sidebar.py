@@ -15,7 +15,7 @@ import helpers as H
 import auth
 
 NAV_ITEMS = [
-    ("dashboard", "📊", "لوحة التحكم"),
+    ("dashboard", "📊", "الرئيسية"),
     ("parents", "👨‍👩‍👧", "أولياء الأمور"),
     ("students", "🎒", "الطلاب"),
     ("teachers", "👩‍🏫", "المعلمون"),
