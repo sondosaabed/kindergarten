@@ -186,6 +186,7 @@ h1, h2, h3, h4 {
     color: var(--text-muted);
     margin-bottom: 20px;
     font-size: 14px;
+    text-align: right;
 }
 
 /* ---------------------------------------------------------------- */
