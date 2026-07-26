@@ -15,7 +15,7 @@ import auth
 import sidebar
 
 from sections import (
-    dashboard, students, parents, teachers,
+    dashboard, parents, students,  teachers,
     classes, academic_years, registration, payments, reports,
 )
 
