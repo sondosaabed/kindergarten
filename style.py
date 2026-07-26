@@ -32,14 +32,24 @@ CSS = """
 }
 
 /* ---------------------------------------------------------------- */
-/* GLOBAL FONT, RTL & EMOJI FIX (Applies to ALL elements safely)    */
+/* GLOBAL FONT & RTL OVERRIDE                                       */
+/* Target all text elements EXCEPT Streamlit Icon Containers        */
 /* ---------------------------------------------------------------- */
-html, body, [class*="css"], 
-*, 
-input, button, select, textarea, label, span, div, p, h1, h2, h3, h4, h5, h6 {
+html, body, [class*="css"],
+p, span:not([data-testid="stIconMaterial"]):not([class*="material"]), 
+h1, h2, h3, h4, h5, h6, 
+label, input, textarea, select, button,
+div[data-baseweb="select"], .stMarkdown {
     font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', -apple-system, BlinkMacSystemFont, 
                  'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 
                  'Noto Color Emoji', sans-serif !important;
+}
+
+/* Ensure Streamlit Native Material Icons retain their icon font */
+[data-testid="stIconMaterial"], 
+[class*="material-symbols"], 
+i[class*="icon"] {
+    font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
 }
 
 html, body, [class*="css"] {
@@ -66,7 +76,7 @@ section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
 section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] .stMarkdown {
     color: #FFFFFF;
