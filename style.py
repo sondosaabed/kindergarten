@@ -170,6 +170,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
 h1, h2, h3, h4 {
     color: var(--text-main);
     font-weight: 700;
+    text-align: right;
 }
 
 .section-title {
