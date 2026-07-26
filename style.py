@@ -33,7 +33,7 @@ CSS = """
 
 /* ---------------------------------------------------------------- */
 /* GLOBAL FONT & RTL OVERRIDE                                       */
-/* Target all text elements EXCEPT Streamlit Icon Containers        */
+/* Target text elements while preserving Streamlit native icons     */
 /* ---------------------------------------------------------------- */
 html, body, [class*="css"],
 p, span:not([data-testid="stIconMaterial"]):not([class*="material"]), 
@@ -45,7 +45,7 @@ div[data-baseweb="select"], .stMarkdown {
                  'Noto Color Emoji', sans-serif !important;
 }
 
-/* Ensure Streamlit Native Material Icons retain their icon font */
+/* Preserve Streamlit Native Material Icons font */
 [data-testid="stIconMaterial"], 
 [class*="material-symbols"], 
 i[class*="icon"] {
@@ -71,7 +71,7 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Target general sidebar text without overriding button contents */
+/* Target general sidebar text without overriding icon elements */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -134,7 +134,7 @@ section[data-testid="stSidebar"] .stButton > button {
     width: 100%;
 }
 
-/* Inactive/Secondary Sidebar Buttons (Dark Text on White Background) */
+/* Inactive/Secondary Sidebar Buttons */
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: #FFFFFF !important;
     color: var(--text-main) !important;
@@ -324,6 +324,73 @@ div[data-testid="stMetricValue"] {
 }
 
 /* ---------------------------------------------------------------- */
+/* LOGIN SCREEN STYLING                                             */
+/* ---------------------------------------------------------------- */
+
+/* Unified Login Modal */
+.login-container {
+    background: #FFFFFF;
+    border: 1px solid #E7E5E4;
+    border-radius: 20px;
+    padding: 32px 28px 24px 28px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+    margin: 30px auto;
+    max-width: 440px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.login-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1C1917;
+    margin: 12px 0 2px 0 !important;
+}
+
+.login-header .subtitle-en {
+    color: #78716C;
+    font-size: 13px;
+    margin: 0 0 8px 0;
+}
+
+.login-header .subtitle-ar {
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Remove default Form box border inside the login card */
+.login-container div[data-testid="stForm"] {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Primary Button Styling Override for Login Form */
+.login-container .stButton > button[kind="primary"] {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #FFFFFF !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+.login-container .stButton > button[kind="primary"]:hover {
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.3) !important;
+}
+
+/* ---------------------------------------------------------------- */
 /* Mobile Responsiveness                                            */
 /* ---------------------------------------------------------------- */
 @media (max-width: 768px) {
@@ -371,6 +438,11 @@ div[data-testid="stMetricValue"] {
 
     div[data-testid="stDataFrame"] {
         overflow-x: auto;
+    }
+
+    .login-container {
+        padding: 24px 18px 18px 18px;
+        margin: 10px auto;
     }
 }
 
