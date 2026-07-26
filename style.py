@@ -31,11 +31,18 @@ CSS = """
     --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
 }
 
-/* Base Global Reset */
+/* ---------------------------------------------------------------- */
+/* GLOBAL FONT & RTL OVERRIDE (Applies font to EVERY single element) */
+/* ---------------------------------------------------------------- */
+html, body, [class*="css"], 
+*, 
+input, button, select, textarea, label, span, div, p, h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', sans-serif !important;
+}
+
 html, body, [class*="css"] {
     direction: RTL;
     text-align: right;
-    font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', sans-serif;
     color: var(--text-main);
 }
 
