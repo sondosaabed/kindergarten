@@ -335,7 +335,7 @@ div[data-testid="stMetricValue"] {
     padding: 32px 28px 24px 28px;
     box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
     margin: 30px auto;
-    max-width: 440px;
+    max-width: 1000px;
 }
 
 .login-header {
