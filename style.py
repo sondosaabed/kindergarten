@@ -167,7 +167,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
 /* ---------------------------------------------------------------- */
 /* Content Headings & Titles                                        */
 /* ---------------------------------------------------------------- */
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5 {
     color: var(--text-main);
     font-weight: 700;
     text-align: right;
