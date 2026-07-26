@@ -32,12 +32,14 @@ CSS = """
 }
 
 /* ---------------------------------------------------------------- */
-/* GLOBAL FONT & RTL OVERRIDE (Applies font to EVERY single element) */
+/* GLOBAL FONT, RTL & EMOJI FIX (Applies to ALL elements safely)    */
 /* ---------------------------------------------------------------- */
 html, body, [class*="css"], 
 *, 
 input, button, select, textarea, label, span, div, p, h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', sans-serif !important;
+    font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', -apple-system, BlinkMacSystemFont, 
+                 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 
+                 'Noto Color Emoji', sans-serif !important;
 }
 
 html, body, [class*="css"] {
