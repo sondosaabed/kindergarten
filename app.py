@@ -38,8 +38,8 @@ conn = get_connection()
 # --------------------------------------------------------------------------
 ROUTES = {
     "dashboard": dashboard.render,
-    "students": students.render,
     "parents": parents.render,
+    "students": students.render,
     "teachers": teachers.render,
     "classes": classes.render,
     "years": academic_years.render,
