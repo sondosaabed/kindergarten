@@ -180,6 +180,7 @@ h1, h2, h3, h4 {
     font-weight: 800;
     color: var(--text-main);
     margin-bottom: 4px;
+    text-align: right;
 }
 
 .section-sub {
