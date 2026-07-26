@@ -329,13 +329,7 @@ div[data-testid="stMetricValue"] {
 
 /* Unified Login Modal */
 .login-container {
-    background: #FFFFFF;
-    border: 1px solid #E7E5E4;
-    border-radius: 20px;
-    padding: 32px 28px 24px 28px;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
-    margin: 30px auto;
-    max-width: 1000px;
+
 }
 
 .login-header {
