@@ -11,7 +11,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header("👩‍🏫", "المعلمون", "بيانات الكادر التعليمي")
+    ui.section_header(" 👩‍🏫 ", "المعلمات", "بيانات الكادر التعليمي")
 
     tab_add, tab_view = st.tabs(["➕ إضافة معلم/ة", "📋 عرض / تعديل / حذف"])
 

@@ -12,7 +12,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header("📝", "التسجيل المدرسي", "تسجيل طالب في صف لسنة دراسية محددة")
+    ui.section_header(" 📝 ", "التسجيل المدرسي", "تسجيل طالب في صف لسنة دراسية محددة")
 
     students_df = ui.df(conn, "SELECT student_id, full_name FROM students")
     classes_df = ui.df(conn, "SELECT class_id, class_type, section, class_name FROM classes")

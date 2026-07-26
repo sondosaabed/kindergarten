@@ -13,7 +13,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header("🏷️", "الصفوف", "تنظيم الشعب وتعيين المعلمات")
+    ui.section_header(" 🏷️ ", "الصفوف", "تنظيم الشعب وتعيين المعلمات")
 
     tab_add, tab_view = st.tabs(["➕ إضافة صف", "📋 عرض / تعديل / حذف"])
 

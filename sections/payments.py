@@ -14,7 +14,7 @@ import receipt
 
 
 def render(conn):
-    ui.section_header("💵", "الدفعات المالية", "تسجيل دفعة نقدية وطباعة وصل استلام")
+    ui.section_header(" 💵 ", "الدفعات المالية", "تسجيل دفعة نقدية وطباعة وصل استلام")
 
     active_regs = ui.df(conn, """
         SELECT r.registration_id, s.full_name AS student_name, p.father_name,

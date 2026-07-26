@@ -10,7 +10,7 @@ import ui
 
 
 def render(conn):
-    ui.section_header("📅", "السنوات الدراسية", "إدارة الأفواج والسنوات")
+    ui.section_header(" 📅 ", "السنوات الدراسية", "إدارة الأفواج والسنوات")
 
     tab_add, tab_view = st.tabs(["➕ إضافة سنة دراسية", "📋 عرض / تعديل / حذف"])
 

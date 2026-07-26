@@ -21,7 +21,7 @@ def _to_excel(d):
 
 
 def render(conn):
-    ui.section_header("📈", "التقارير والتصدير", "استخراج بيانات مفلترة إلى Excel")
+    ui.section_header(" 📈 ", "التقارير والتصدير", "استخراج بيانات مفلترة إلى Excel")
 
     report_type = st.radio(
         "اختر نوع التقرير",

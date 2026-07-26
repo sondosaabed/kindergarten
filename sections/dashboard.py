@@ -12,7 +12,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
+    ui.section_header(" 📊 ", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
     total_students = ui.df(conn, "SELECT COUNT(*) c FROM students").iloc[0]['c']
     total_teachers = ui.df(conn, "SELECT COUNT(*) c FROM teachers").iloc[0]['c']

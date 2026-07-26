@@ -13,7 +13,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header("🎒", "إدارة الطلاب", "إضافة وتعديل ومتابعة بيانات الأطفال")
+    ui.section_header(" 🎒 ", "إدارة الطلاب", "إضافة وتعديل ومتابعة بيانات الأطفال")
 
     tab_add, tab_view = st.tabs(["➕ إضافة طالب جديد", "📋 عرض / تعديل / حذف"])
 
