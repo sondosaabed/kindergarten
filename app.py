@@ -22,8 +22,7 @@ LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "
 # --------------------------------------------------------------------------
 # Setup
 # --------------------------------------------------------------------------
-st.set_page_config(page_title="روضة مؤسسة شباب البيرة", page_icon=LOGO_PATH, layout="wide",
-                   initial_sidebar_state="collapsed")
+st.set_page_config(page_title="روضة مؤسسة شباب البيرة", page_icon=LOGO_PATH, layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
 
 if not auth.check_authentication():
