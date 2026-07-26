@@ -52,8 +52,15 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-section[data-testid="stSidebar"] * {
-    color: #FFFFFF !important;
+/* Target general sidebar text without overriding button contents */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown {
+    color: #FFFFFF;
 }
 
 /* Sidebar Brand Header */
@@ -68,13 +75,14 @@ section[data-testid="stSidebar"] * {
     margin: 0;
     font-size: 20px;
     font-weight: 800;
+    color: #FFFFFF !important;
     letter-spacing: -0.3px;
 }
 
 .brand-box p {
     margin: 4px 0 0 0;
     font-size: 13px;
-    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Sidebar Stats & Info Badges */
@@ -85,6 +93,7 @@ section[data-testid="stSidebar"] * {
     padding: 10px 14px;
     margin-bottom: 10px;
     font-size: 13px;
+    color: #FFFFFF !important;
     backdrop-filter: blur(4px);
 }
 
@@ -99,30 +108,41 @@ section[data-testid="stSidebar"] .stButton > button {
     text-align: right;
     justify-content: flex-start;
     margin-bottom: 8px;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px 16px;
-    font-weight: 600;
+    font-weight: 700;
     transition: all 0.2s ease;
+    width: 100%;
 }
 
+/* Inactive/Secondary Sidebar Buttons (Dark Text on White Background) */
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-    background: rgba(255, 255, 255, 0.06);
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #FFFFFF !important;
+    color: var(--text-main) !important;
+    border: 1px solid #E7E5E4 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
+    color: var(--text-main) !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateX(-2px);
+    background: #F5F5F4 !important;
+    border-color: #D6D3D1 !important;
+    transform: translateY(-1px);
 }
 
+/* Active/Primary Sidebar Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: var(--primary);
+    background: var(--primary) !important;
     color: #FFFFFF !important;
-    border: none;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
+    color: #FFFFFF !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -260,7 +280,7 @@ div[data-testid="stForm"] {
     color: var(--coral-pink);
 }
 
-/* Streamlit Overrides */
+/* Streamlit Main Body Overrides */
 div[data-testid="stMetricValue"] {
     color: var(--primary-dark);
     font-weight: 800;
