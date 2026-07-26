@@ -11,7 +11,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header(" 👨‍👩‍👧 ", "أولياء الأمور", "بيانات الأب والأم والتواصل")
+    ui.section_header(" 👨‍👩‍👧 "," أولياء الأمور ", "بيانات الأب والأم والتواصل")
 
     tab_add, tab_view = st.tabs(["➕ إضافة ولي أمر جديد", "📋 عرض / تعديل / حذف"])
 
