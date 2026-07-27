@@ -36,3 +36,18 @@ sections/
 - **الترتيب المقترح عند أول استخدام:** المعلمون ← الصفوف ← السنة الدراسية ← أولياء الأمور ← الطلاب ← التسجيل ← الدفعات المالية.
 - حالة التسجيل (مسجل جديد / منتظم) تتحدث تلقائياً بمجرد تسجيل دفعة "رسوم تسجيل".
 - زر تحميل Excel متاح في شاشة التقارير.
+
+
+<img width="1287" height="895" alt="image" src="https://github.com/user-attachments/assets/75c9a208-c805-48d4-9de8-1a1c8b434a82" />
+
+
+
+<img width="1910" height="930" alt="image" src="https://github.com/user-attachments/assets/ac06a2f2-b60c-4e62-a93d-4bc50670cfeb" />
+
+
+
+<img width="1912" height="922" alt="image" src="https://github.com/user-attachments/assets/b68391db-4ab4-4861-8fc0-efdbdc23055e" />
+
+
+<img width="1905" height="841" alt="image" src="https://github.com/user-attachments/assets/6f9e0039-d379-441b-a070-e0c17efa9a31" />
+
