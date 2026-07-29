@@ -1,8 +1,8 @@
 """
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
+Optimized for high performance with batch SQL queries.
 Top-level KPIs, revenue trend, class distribution and recent activity.
-Updated for PostgreSQL / Supabase connection syntax.
 """
 
 import streamlit as st
@@ -14,35 +14,43 @@ import helpers as H
 def render(conn):
     ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
-    # Fetch KPI metrics safely
-    df_st = ui.df(conn, "SELECT COUNT(*) AS c FROM students")
-    total_students = df_st.iloc[0]['c'] if not df_st.empty else 0
+    # Single batch query to calculate key counts and sums in one round-trip
+    summary_df = ui.df(conn, """
+        SELECT 
+            (SELECT COUNT(*) FROM students) AS total_students,
+            (SELECT COUNT(*) FROM teachers) AS total_teachers,
+            (SELECT COUNT(*) FROM classes) AS total_classes,
+            (SELECT COALESCE(SUM(amount), 0) FROM payments) AS total_revenue,
+            (SELECT COUNT(*) FROM registrations WHERE status = %s) AS pending_regs
+    """, (H.STATUS_NEW,))
 
-    df_tc = ui.df(conn, "SELECT COUNT(*) AS c FROM teachers")
-    total_teachers = df_tc.iloc[0]['c'] if not df_tc.empty else 0
+    if not summary_df.empty:
+        row = summary_df.iloc[0]
+        total_students = row['total_students']
+        total_teachers = row['total_teachers']
+        total_classes = row['total_classes']
+        total_revenue = row['total_revenue']
+        pending = row['pending_regs']
+    else:
+        total_students = total_teachers = total_classes = pending = 0
+        total_revenue = 0.0
 
-    df_cl = ui.df(conn, "SELECT COUNT(*) AS c FROM classes")
-    total_classes = df_cl.iloc[0]['c'] if not df_cl.empty else 0
+    # Optimized SQL aggregation to calculate outstanding balances directly in DB
+    outstanding_df = ui.df(conn, """
+        SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0) AS total_outstanding
+        FROM registrations r
+        LEFT JOIN (
+            SELECT registration_id, SUM(amount) AS paid
+            FROM payments
+            WHERE payment_for IN ('رسوم تسجيل', 'أقساط تعليمية')
+            GROUP BY registration_id
+        ) p ON p.registration_id = r.registration_id
+        WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
+    """, (H.ANNUAL_TUITION,))
+    
+    total_outstanding = outstanding_df.iloc[0]['total_outstanding'] if not outstanding_df.empty else 0.0
 
-    df_rev = ui.df(conn, "SELECT COALESCE(SUM(amount), 0) AS s FROM payments")
-    total_revenue = df_rev.iloc[0]['s'] if not df_rev.empty else 0.0
-
-    df_pen = ui.df(
-        conn,
-        "SELECT COUNT(*) AS c FROM registrations WHERE status = %s",
-        (H.STATUS_NEW,)
-    )
-    pending = df_pen.iloc[0]['c'] if not df_pen.empty else 0
-
-    # Outstanding balance across every registration in the latest academic year
-    latest_year_regs = ui.df(conn, """
-        SELECT registration_id FROM registrations
-        WHERE year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
-    """)
-    total_outstanding = sum(
-        H.compute_remaining_balance(conn, int(rid)) for rid in latest_year_regs['registration_id']
-    ) if not latest_year_regs.empty else 0.0
-
+    # Render KPI Cards
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, "#E9F5EC", "#219044")
     ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, "#FBF3E3", "#D7A431")
@@ -57,7 +65,6 @@ def render(conn):
     with left:
         with st.container(border=True):
             st.markdown("##### 📈 المقبوضات آخر 6 أشهر")
-            # PostgreSQL syntax: TO_CHAR instead of strftime
             rev = ui.df(conn, """
                 SELECT TO_CHAR(payment_date::date, 'YYYY-MM') AS "الشهر", SUM(amount) AS "المبلغ"
                 FROM payments
