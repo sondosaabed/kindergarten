@@ -1,13 +1,13 @@
 """
-style.py — Central CSS for Streamlit App. Professional RTL layout with a warm, modern palette.
+style.py — Central CSS for Streamlit App. Professional RTL layout with clean Cairo font everywhere.
 """
 
 CSS = """
 <style>
 /* ---------------------------------------------------------------- */
-/* Google Fonts Import for Clean Arabic / RTL Typography            */
+/* Google Fonts Import for Cairo Arabic Font                        */
 /* ---------------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Vazirmatn:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
 :root {
     /* Main Brand Colors (Fresh Emerald & Dark Slate) */
@@ -34,20 +34,19 @@ CSS = """
 }
 
 /* ---------------------------------------------------------------- */
-/* GLOBAL FONT & RTL OVERRIDE                                       */
-/* Target text elements while preserving Streamlit native icons     */
+/* GLOBAL FONT OVERRIDE — FORCING 'Cairo' EVERYWHERE                */
 /* ---------------------------------------------------------------- */
+*, *::before, *::after,
 html, body, [class*="css"],
-p, span:not([data-testid="stIconMaterial"]):not([class*="material"]), 
+p, span, div, a, li, blockquote,
 h1, h2, h3, h4, h5, h6, 
 label, input, textarea, select, button,
-div[data-baseweb="select"], .stMarkdown {
-    font-family: 'Cairo', 'Vazirmatn', 'Segoe UI', -apple-system, BlinkMacSystemFont, 
-                 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 
-                 'Noto Color Emoji', sans-serif !important;
+div[data-baseweb="select"], 
+.stMarkdown, .stMarkdown p, .section-title, .section-sub {
+    font-family: 'Cairo', sans-serif !important;
 }
 
-/* Preserve Streamlit Native Material Icons font */
+/* Preserve Streamlit Native Material Icons */
 [data-testid="stIconMaterial"], 
 [class*="material-symbols"], 
 i[class*="icon"] {
@@ -65,7 +64,32 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* TABS STYLING FIXES (RTL Alignment & Active Highlighting)        */
+/* SECTION TITLES & SUBTITLES IN CAIRO                              */
+/* ---------------------------------------------------------------- */
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 26px;
+    font-weight: 800 !important;
+    font-family: 'Cairo', sans-serif !important;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.section-sub {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-size: 15px;
+    font-weight: 600 !important;
+    font-family: 'Cairo', sans-serif !important;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------- */
+/* TABS STYLING FIXES                                               */
 /* ---------------------------------------------------------------- */
 div[data-testid="stTabs"] {
     direction: rtl !important;
@@ -84,6 +108,7 @@ button[data-baseweb="tab"] {
     border-radius: 10px 10px 0 0 !important;
     font-weight: 700 !important;
     font-size: 15px !important;
+    font-family: 'Cairo', sans-serif !important;
     color: var(--text-muted) !important;
     background-color: transparent !important;
     transition: all 0.2s ease;
@@ -107,10 +132,9 @@ section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, var(--primary-dark) 0%, #022C22 100%);
     direction: RTL;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
-    overflow: hidden !important; /* Hide image overflow */
+    overflow: hidden !important;
 }
 
-/* CRITICAL FIX: Hide all sidebar elements completely when collapsed in RTL */
 section[data-testid="stSidebar"][data-collapsed="true"] {
     visibility: hidden !important;
 }
@@ -120,7 +144,6 @@ section[data-testid="stSidebar"][data-collapsed="true"] * {
     opacity: 0 !important;
 }
 
-/* Target general sidebar text without overriding icon elements */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -129,9 +152,9 @@ section[data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] .stMarkdown {
     color: #FFFFFF;
+    font-family: 'Cairo', sans-serif !important;
 }
 
-/* Sidebar Brand Header */
 .brand-box {
     text-align: center;
     padding: 12px 8px 20px 8px;
@@ -145,15 +168,16 @@ section[data-testid="stSidebar"] .stMarkdown {
     font-weight: 800;
     color: #FFFFFF !important;
     letter-spacing: -0.3px;
+    font-family: 'Cairo', sans-serif !important;
 }
 
 .brand-box p {
     margin: 4px 0 0 0;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.8) !important;
+    font-family: 'Cairo', sans-serif !important;
 }
 
-/* Sidebar Stats & Info Badges */
 .sidebar-stat {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -163,15 +187,16 @@ section[data-testid="stSidebar"] .stMarkdown {
     font-size: 13px;
     color: #FFFFFF !important;
     backdrop-filter: blur(4px);
+    font-family: 'Cairo', sans-serif !important;
 }
 
 .sidebar-stat b {
     font-size: 17px;
     display: block;
     color: var(--primary-light) !important;
+    font-family: 'Cairo', sans-serif !important;
 }
 
-/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton > button {
     text-align: right;
     justify-content: flex-start;
@@ -179,11 +204,11 @@ section[data-testid="stSidebar"] .stButton > button {
     border-radius: 12px;
     padding: 10px 16px;
     font-weight: 700;
+    font-family: 'Cairo', sans-serif !important;
     transition: all 0.2s ease;
     width: 100%;
 }
 
-/* Inactive/Secondary Sidebar Buttons */
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: #FFFFFF !important;
     color: var(--text-main) !important;
@@ -193,6 +218,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
 
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
     color: var(--text-main) !important;
+    font-family: 'Cairo', sans-serif !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
@@ -201,7 +227,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     transform: translateY(-1px);
 }
 
-/* Active/Primary Sidebar Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     background: var(--primary) !important;
     color: #FFFFFF !important;
@@ -211,36 +236,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
     color: #FFFFFF !important;
-}
-
-/* ---------------------------------------------------------------- */
-/* CONTENT HEADINGS & TITLES                                        */
-/* ---------------------------------------------------------------- */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-main);
-    font-weight: 700;
-    text-align: right;
-    margin-top: 8px;
-    margin-bottom: 12px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--primary-dark);
-    margin-bottom: 4px;
-    text-align: center;
-}
-
-.section-sub {
-    color: var(--text-muted);
-    margin-bottom: 24px;
-    font-size: 15px;
-    text-align: center;
+    font-family: 'Cairo', sans-serif !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -255,7 +251,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-bottom: 16px;
 }
 
-/* Dataframe Styling for RTL text alignment */
 div[data-testid="stDataFrame"] {
     direction: rtl !important;
     border-radius: 12px;
@@ -298,12 +293,14 @@ div[data-testid="stDataFrame"] {
     font-weight: 800;
     color: var(--text-main);
     line-height: 1.1;
+    font-family: 'Cairo', sans-serif !important;
 }
 
 .kpi-label {
     font-size: 13px;
     color: var(--text-muted);
     margin-top: 4px;
+    font-family: 'Cairo', sans-serif !important;
 }
 
 /* Form inputs styling */
@@ -318,6 +315,7 @@ div[data-testid="stForm"] {
 .stButton > button {
     border-radius: 10px;
     font-weight: 700;
+    font-family: 'Cairo', sans-serif !important;
     transition: all 0.2s ease;
 }
 
