@@ -2,13 +2,7 @@
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
 Top-level KPIs, revenue trend, class distribution and recent activity.
-Edit this file only to change what appears on the dashboard.
-
-Cards below use `with st.container(border=True):` rather than opening a
-raw <div class="card"> across several st.* calls — see the note in
-style.py / auth.py: an HTML div opened in one call can't wrap widgets
-rendered in later calls, so the old approach rendered an empty box next
-to the real content instead of around it.
+Updated for PostgreSQL / Supabase connection syntax.
 """
 
 import streamlit as st
@@ -20,14 +14,27 @@ import helpers as H
 def render(conn):
     ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
-    total_students = ui.df(conn, "SELECT COUNT(*) c FROM students").iloc[0]['c']
-    total_teachers = ui.df(conn, "SELECT COUNT(*) c FROM teachers").iloc[0]['c']
-    total_classes = ui.df(conn, "SELECT COUNT(*) c FROM classes").iloc[0]['c']
-    total_revenue = ui.df(conn, "SELECT COALESCE(SUM(amount),0) s FROM payments").iloc[0]['s']
-    pending = ui.df(conn, f"SELECT COUNT(*) c FROM registrations WHERE status = '{H.STATUS_NEW}'").iloc[0]['c']
+    # Fetch KPI metrics safely
+    df_st = ui.df(conn, "SELECT COUNT(*) AS c FROM students")
+    total_students = df_st.iloc[0]['c'] if not df_st.empty else 0
 
-    # Outstanding balance across every registration in the latest academic
-    # year (each student owes ANNUAL_TUITION per year, reg. fee included).
+    df_tc = ui.df(conn, "SELECT COUNT(*) AS c FROM teachers")
+    total_teachers = df_tc.iloc[0]['c'] if not df_tc.empty else 0
+
+    df_cl = ui.df(conn, "SELECT COUNT(*) AS c FROM classes")
+    total_classes = df_cl.iloc[0]['c'] if not df_cl.empty else 0
+
+    df_rev = ui.df(conn, "SELECT COALESCE(SUM(amount), 0) AS s FROM payments")
+    total_revenue = df_rev.iloc[0]['s'] if not df_rev.empty else 0.0
+
+    df_pen = ui.df(
+        conn,
+        "SELECT COUNT(*) AS c FROM registrations WHERE status = %s",
+        (H.STATUS_NEW,)
+    )
+    pending = df_pen.iloc[0]['c'] if not df_pen.empty else 0
+
+    # Outstanding balance across every registration in the latest academic year
     latest_year_regs = ui.df(conn, """
         SELECT registration_id FROM registrations
         WHERE year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
@@ -50,11 +57,12 @@ def render(conn):
     with left:
         with st.container(border=True):
             st.markdown("##### 📈 المقبوضات آخر 6 أشهر")
+            # PostgreSQL syntax: TO_CHAR instead of strftime
             rev = ui.df(conn, """
-                SELECT strftime('%Y-%m', payment_date) AS الشهر, SUM(amount) AS المبلغ
+                SELECT TO_CHAR(payment_date::date, 'YYYY-MM') AS "الشهر", SUM(amount) AS "المبلغ"
                 FROM payments
-                GROUP BY الشهر
-                ORDER BY الشهر DESC
+                GROUP BY TO_CHAR(payment_date::date, 'YYYY-MM')
+                ORDER BY TO_CHAR(payment_date::date, 'YYYY-MM') DESC
                 LIMIT 6
             """).sort_values("الشهر")
             if rev.empty:
@@ -66,11 +74,11 @@ def render(conn):
         with st.container(border=True):
             st.markdown("##### 🏷️ توزيع الطلاب على الصفوف")
             dist = ui.df(conn, """
-                SELECT (c.class_type || ' ' || c.section) AS الصف, COUNT(r.registration_id) AS العدد
+                SELECT (c.class_type || ' ' || c.section) AS "الصف", COUNT(r.registration_id) AS "العدد"
                 FROM classes c
                 LEFT JOIN registrations r ON r.class_id = c.class_id
                     AND r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
-                GROUP BY c.class_id
+                GROUP BY c.class_id, c.class_type, c.section
             """)
             if dist.empty:
                 ui.empty_state("لا توجد صفوف بعد.")
