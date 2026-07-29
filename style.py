@@ -65,7 +65,7 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* Tabs Styling Fixes (RTL Alignment & Active Highlighting)        */
+/* TABS STYLING FIXES (RTL Alignment & Active Highlighting)        */
 /* ---------------------------------------------------------------- */
 div[data-testid="stTabs"] {
     direction: rtl !important;
@@ -101,14 +101,26 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* Sidebar Styling                                                  */
+/* SIDEBAR STYLING & COLLAPSED BLEED FIX                            */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, var(--primary-dark) 0%, #022C22 100%);
     direction: RTL;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden !important; /* Hide image overflow */
 }
 
+/* CRITICAL FIX: Hide all sidebar elements completely when collapsed in RTL */
+section[data-testid="stSidebar"][data-collapsed="true"] {
+    visibility: hidden !important;
+}
+
+section[data-testid="stSidebar"][data-collapsed="true"] * {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Target general sidebar text without overriding icon elements */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -119,6 +131,7 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: #FFFFFF;
 }
 
+/* Sidebar Brand Header */
 .brand-box {
     text-align: center;
     padding: 12px 8px 20px 8px;
@@ -140,6 +153,7 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* Sidebar Stats & Info Badges */
 .sidebar-stat {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -157,6 +171,7 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: var(--primary-light) !important;
 }
 
+/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton > button {
     text-align: right;
     justify-content: flex-start;
@@ -168,6 +183,7 @@ section[data-testid="stSidebar"] .stButton > button {
     width: 100%;
 }
 
+/* Inactive/Secondary Sidebar Buttons */
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: #FFFFFF !important;
     color: var(--text-main) !important;
@@ -185,6 +201,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     transform: translateY(-1px);
 }
 
+/* Active/Primary Sidebar Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     background: var(--primary) !important;
     color: #FFFFFF !important;
@@ -197,7 +214,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
 }
 
 /* ---------------------------------------------------------------- */
-/* Content Headings & Titles Alignment Fix                         */
+/* CONTENT HEADINGS & TITLES                                        */
 /* ---------------------------------------------------------------- */
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-main);
@@ -227,7 +244,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ---------------------------------------------------------------- */
-/* Containers, DataFrames & Form Elements                           */
+/* CONTAINERS, DATAFRAMES & FORM ELEMENTS                           */
 /* ---------------------------------------------------------------- */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--card-bg);
@@ -317,7 +334,7 @@ div[data-testid="stForm"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* Mobile Responsiveness                                            */
+/* MOBILE RESPONSIVENESS                                            */
 /* ---------------------------------------------------------------- */
 @media (max-width: 768px) {
     .block-container {
