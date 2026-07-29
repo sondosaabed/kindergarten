@@ -85,7 +85,7 @@ def _logo_base64():
         return base64.b64encode(f.read()).decode()
 
 
-def render_logo(width=110, center=True, drop_shadow=True):
+def render_logo(width=150, center=True, drop_shadow=True):
     b64 = _logo_base64()
     if not b64:
         return
