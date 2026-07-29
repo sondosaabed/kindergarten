@@ -1,7 +1,7 @@
 """
 sections/parents.py — أولياء الأمور
 
-Add, search, edit and delete parent (father/mother) records.
+Add, search, edit and delete parent records.
 """
 
 import streamlit as st
@@ -57,23 +57,25 @@ def render(conn):
                 if not all(required):
                     st.warning("يرجى تعبئة جميع الحقول الأساسية (*).")
                 else:
-                    existing = ui.df(conn, "SELECT 1 FROM parents WHERE father_id = ?", (father_id,))
+                    existing = ui.df(conn, "SELECT 1 FROM parents WHERE father_id = %s", (father_id,))
                     if not existing.empty:
                         st.error("رقم هوية الأب مسجل مسبقاً.")
                     else:
-                        conn.execute('''
+                        cur = conn.cursor()
+                        cur.execute('''
                             INSERT INTO parents
                             (father_id, mother_id, father_name, mother_name, father_job, mother_job,
                              mother_work_type, father_id_type, mother_id_type, address, landline,
                              status_refugee, father_work_phone, mother_work_phone, father_mobile,
                              mother_mobile, emergency_contact_name, emergency_contact_phone,
                              marital_status, created_at)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                         ''', (father_id, mother_id, father_name, mother_name, father_job, mother_job_status,
                               mother_work_type, father_id_type, mother_id_type, address, landline,
                               residency, father_work_phone, mother_work_phone, father_mobile,
                               mother_mobile, emerg_name, emerg_phone, marital, H.now_str()))
                         conn.commit()
+                        cur.close()
                         st.success(f"تم حفظ بيانات ولي الأمر «{father_name}» بنجاح! 🎉")
                         st.rerun()
 
@@ -86,8 +88,8 @@ def render(conn):
             shown = parents.copy()
             if search:
                 shown = shown[shown['father_name'].str.contains(search, na=False) |
-                               shown['mother_name'].str.contains(search, na=False) |
-                               shown['father_id'].str.contains(search, na=False)]
+                              shown['mother_name'].str.contains(search, na=False) |
+                              shown['father_id'].str.contains(search, na=False)]
             st.dataframe(shown.rename(columns={
                 'father_id': 'هوية الأب', 'father_name': 'اسم الأب', 'mother_name': 'اسم الأم',
                 'father_mobile': 'جوال الأب', 'mother_mobile': 'جوال الأم', 'address': 'العنوان',
@@ -98,11 +100,12 @@ def render(conn):
             st.divider()
             st.markdown("##### ✏️ تعديل أو حذف ولي أمر")
             pick = st.selectbox("اختر ولي الأمر", parents['father_name'] + " — " + parents['father_id'],
-                                 index=None, placeholder="ابحث...")
+                                index=None, placeholder="ابحث...")
             if pick:
                 fid = pick.split(" — ")[-1]
                 row = parents[parents['father_id'] == fid].iloc[0]
-                linked_students = ui.df(conn, "SELECT COUNT(*) c FROM students WHERE father_id=?", (fid,)).iloc[0]['c']
+                linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM students WHERE father_id=%s", (fid,))
+                linked_students = linked_df.iloc[0]['c'] if not linked_df.empty else 0
 
                 with st.form("edit_parent_form"):
                     c1, c2 = st.columns(2)
@@ -118,21 +121,25 @@ def render(conn):
                     delete = b2.form_submit_button("🗑️ حذف ولي الأمر")
 
                     if save:
-                        conn.execute('''
-                            UPDATE parents SET father_name=?, mother_name=?, father_mobile=?,
-                                mother_mobile=?, address=? WHERE father_id=?
+                        cur = conn.cursor()
+                        cur.execute('''
+                            UPDATE parents SET father_name=%s, mother_name=%s, father_mobile=%s,
+                                mother_mobile=%s, address=%s WHERE father_id=%s
                         ''', (e_fname, e_mname, e_fmobile, e_mmobile, e_address, fid))
                         conn.commit()
+                        cur.close()
                         st.success("تم حفظ التعديلات.")
                         st.rerun()
 
                     if delete:
                         if linked_students > 0:
                             st.error(f"⚠️ لا يمكن الحذف مباشرة: يوجد {linked_students} طالب مرتبط بولي الأمر هذا. "
-                                      "احذف أو انقل الطلاب أولاً.")
+                                     "احذف أو انقل الطلاب أولاً.")
                         else:
-                            conn.execute("DELETE FROM parents WHERE father_id=?", (fid,))
+                            cur = conn.cursor()
+                            cur.execute("DELETE FROM parents WHERE father_id=%s", (fid,))
                             conn.commit()
+                            cur.close()
                             st.success("تم حذف ولي الأمر.")
                             st.rerun()
 
