@@ -34,7 +34,7 @@ def check_authentication():
         # Single Form Container (Acts as the Card)
         with st.form("login_form", clear_on_submit=False):
             # Render Logo
-            ui.render_logo(width=110, center=True, drop_shadow=False)
+            ui.render_logo(width=300, center=True, drop_shadow=False)
 
             # Header HTML inside the form card
             st.markdown("""
