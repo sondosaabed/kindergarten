@@ -27,13 +27,15 @@ def render(conn):
                 if not year_id:
                     st.warning("يرجى إدخال السنة الدراسية.")
                 else:
-                    existing = ui.df(conn, "SELECT 1 FROM academic_years WHERE year_id=?", (year_id,))
+                    existing = ui.df(conn, "SELECT 1 FROM academic_years WHERE year_id=%s", (year_id,))
                     if not existing.empty:
                         st.error("هذه السنة الدراسية موجودة مسبقاً.")
                     else:
-                        conn.execute("INSERT INTO academic_years VALUES (?,?,?,?)",
-                                     (year_id, str(start_date), str(end_date), cohort_name))
+                        cur = conn.cursor()
+                        cur.execute("INSERT INTO academic_years VALUES (%s,%s,%s,%s)",
+                                    (year_id, str(start_date), str(end_date), cohort_name))
                         conn.commit()
+                        cur.close()
                         st.success("تم حفظ السنة الدراسية بنجاح! 🎉")
                         st.rerun()
 
@@ -50,12 +52,15 @@ def render(conn):
             st.divider()
             pick = st.selectbox("اختر سنة للحذف", years['year_id'], index=None, placeholder="اختر...")
             if pick:
-                linked = ui.df(conn, "SELECT COUNT(*) c FROM registrations WHERE year_id=?", (pick,)).iloc[0]['c']
+                linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM registrations WHERE year_id=%s", (pick,))
+                linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
                 if linked > 0:
                     st.error(f"⚠️ يوجد {linked} تسجيل مرتبط بهذه السنة. لا يمكن الحذف.")
                 else:
                     if st.button("🗑️ حذف السنة الدراسية"):
-                        conn.execute("DELETE FROM academic_years WHERE year_id=?", (pick,))
+                        cur = conn.cursor()
+                        cur.execute("DELETE FROM academic_years WHERE year_id=%s", (pick,))
                         conn.commit()
+                        cur.close()
                         st.success("تم الحذف.")
                         st.rerun()
