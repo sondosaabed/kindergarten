@@ -176,19 +176,20 @@ h1, h2, h3, h4, h5, h6 {
 .section-title {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     font-size: 24px;
     font-weight: 800;
     color: var(--text-main);
     margin-bottom: 4px;
-    text-align: right;
+    text-align: center;
 }
 
 .section-sub {
     color: var(--text-muted);
     margin-bottom: 20px;
     font-size: 14px;
-    text-align: right;
+    text-align: center;
 }
 
 /* ---------------------------------------------------------------- */
@@ -206,6 +207,28 @@ h1, h2, h3, h4, h5, h6 {
 
 .card:hover {
     box-shadow: var(--shadow-md);
+}
+
+/* Real bordered containers — use `with st.container(border=True):` in
+   Python instead of opening/closing a raw <div class="card"> across
+   multiple st.* calls. Streamlit renders every st.* call as its own
+   sibling element, so a div opened in one call and closed in another
+   never actually wraps what's "between" them — it just floats there
+   empty while the real content renders next to it. st.container(border=True)
+   is a real parent element, so this gives the same "card" look while
+   actually nesting the chart/table/form inside it. */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--card-bg);
+    border-radius: 16px !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--shadow-sm);
+    padding: 6px 6px;
+    margin-bottom: 16px;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
+    max-width: 440px;
+    margin: 10px auto 0 auto;
+    padding: 28px 26px 18px 26px;
 }
 
 /* KPI Cards */
@@ -329,11 +352,10 @@ div[data-testid="stMetricValue"] {
 /* ---------------------------------------------------------------- */
 /* LOGIN SCREEN STYLING                                             */
 /* ---------------------------------------------------------------- */
-
-/* Unified Login Modal */
-.login-container {
-
-}
+/* .login-marker is a 0px marker rendered as the first element inside
+   the login's st.container(border=True) — :has() lets us style that
+   *actual* container (see stVerticalBlockBorderWrapper rule above)
+   without touching every other bordered container in the app. */
 
 .login-header {
     text-align: center;
@@ -360,16 +382,17 @@ div[data-testid="stMetricValue"] {
     margin: 0;
 }
 
-/* Remove default Form box border inside the login card */
-.login-container div[data-testid="stForm"] {
+/* Remove default form box border inside the login card (the outer
+   container already provides the card look) */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) div[data-testid="stForm"] {
     border: none !important;
     padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
 }
 
-/* Primary Button Styling Override for Login Form */
-.login-container .stButton > button[kind="primary"] {
+/* Primary button styling override for the login form */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) .stButton > button[kind="primary"] {
     background-color: var(--primary) !important;
     border-color: var(--primary) !important;
     color: #FFFFFF !important;
@@ -381,7 +404,7 @@ div[data-testid="stMetricValue"] {
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
 }
 
-.login-container .stButton > button[kind="primary"]:hover {
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) .stButton > button[kind="primary"]:hover {
     background-color: var(--primary-dark) !important;
     border-color: var(--primary-dark) !important;
     box-shadow: 0 6px 16px rgba(6, 78, 59, 0.3) !important;
@@ -410,6 +433,7 @@ div[data-testid="stMetricValue"] {
     .kpi-label { font-size: 12px; }
 
     .card { padding: 16px; border-radius: 14px; }
+    div[data-testid="stVerticalBlockBorderWrapper"] { padding: 4px 4px; border-radius: 14px; }
     div[data-testid="stForm"] { padding: 16px; border-radius: 14px; }
 
     .receipt-box { padding: 18px; font-size: 14px; }
@@ -437,9 +461,10 @@ div[data-testid="stMetricValue"] {
         overflow-x: auto;
     }
 
-    .login-container {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
         padding: 24px 18px 18px 18px;
         margin: 10px auto;
+        max-width: 100%;
     }
 }
 

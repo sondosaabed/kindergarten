@@ -1,5 +1,6 @@
 """
-receipt.py — printable cash receipt with a real "طباعة" button.
+receipt.py — printable cash receipt with a real "طباعة" button and an
+official letterhead (logo + kindergarten name) at the top.
 
 Streamlit runs inside the browser tab, so a plain button can't print just
 one part of the page. The trick: render the receipt inside its own
@@ -11,6 +12,7 @@ print instead of asking the manager to use Ctrl/Cmd+P on the whole app.
 
 import streamlit.components.v1 as components
 
+import ui
 
 RECEIPT_TEMPLATE = """
 <!DOCTYPE html>
@@ -31,6 +33,15 @@ RECEIPT_TEMPLATE = """
         padding: 14px;
         background: #FAF9F5;
     }}
+    .letterhead{{
+        display:flex; align-items:center; justify-content:center; gap:12px;
+        max-width: 460px; margin: 0 auto 10px auto;
+    }}
+    .letterhead img{{ width:56px; height:56px; border-radius:50%; flex-shrink:0; }}
+    .letterhead-text{{ text-align:center; }}
+    .letterhead-text .lh-ar{{ font-size:16px; font-weight:800; color:var(--primary-dark); }}
+    .letterhead-text .lh-en{{ font-size:11px; color:#7C8A7E; }}
+    .lh-divider{{ max-width:460px; margin:0 auto 14px auto; border:none; border-top:2px dashed var(--gold); }}
     .receipt-box{{
         background: #FFFDF6;
         border: 2px dashed var(--gold);
@@ -53,6 +64,8 @@ RECEIPT_TEMPLATE = """
     }}
     .receipt-row span{{ color:#7C8A7E; }}
     .receipt-row b{{ color:#1F2A22; }}
+    .receipt-row.balance{{ border-bottom:none; margin-top:4px; padding-top:10px; border-top:1px solid #e5e0c8; }}
+    .receipt-row.balance b{{ color:#B4790C; font-size:16px; }}
     .print-btn{{
         display:block;
         width: 100%;
@@ -76,8 +89,16 @@ RECEIPT_TEMPLATE = """
 </style>
 </head>
 <body>
+    <div class="letterhead">
+        {logo_img_tag}
+        <div class="letterhead-text">
+            <div class="lh-ar">روضة مؤسسة شباب البيرة</div>
+            <div class="lh-en">Al-Bireh Youth Foundation Kindergarten</div>
+        </div>
+    </div>
+    <hr class="lh-divider">
     <div class="receipt-box">
-        <h3>🧾 وصل استلام نقدية — روضة مؤسسة شباب البيرة</h3>
+        <h3>🧾 وصل استلام نقدية</h3>
         <div class="receipt-row"><span>رقم الوصل</span><b>#{receipt_id}</b></div>
         <div class="receipt-row"><span>التاريخ</span><b>{date}</b></div>
         <div class="receipt-row"><span>اسم الطالب</span><b>{student_name}</b></div>
@@ -85,6 +106,7 @@ RECEIPT_TEMPLATE = """
         <div class="receipt-row"><span>مبلغ وقدره</span><b>{amount} شيكل/دينار</b></div>
         <div class="receipt-row"><span>مقابل</span><b>{reason}</b></div>
         <div class="receipt-row"><span>طريقة الدفع</span><b>كاش 💵</b></div>
+        <div class="receipt-row balance"><span>المبلغ المتبقي لهذه السنة</span><b>{remaining} شيكل/دينار</b></div>
     </div>
     <button class="print-btn" onclick="window.print()">🖨️ طباعة الوصل</button>
 </body>
@@ -92,14 +114,20 @@ RECEIPT_TEMPLATE = """
 """
 
 
-def render_receipt(receipt_id, date, student_name, payer, amount, reason, reason_other=""):
+def render_receipt(receipt_id, date, student_name, payer, amount, reason, remaining, reason_other=""):
     reason_full = f"{reason} ({reason_other})" if reason_other else reason
+
+    logo_b64 = ui._logo_base64()
+    logo_img_tag = f'<img src="data:image/png;base64,{logo_b64}" />' if logo_b64 else ""
+
     html = RECEIPT_TEMPLATE.format(
+        logo_img_tag=logo_img_tag,
         receipt_id=receipt_id,
         date=date,
         student_name=student_name,
         payer=payer,
         amount=amount,
         reason=reason_full,
+        remaining=remaining,
     )
-    components.html(html, height=430, scrolling=True)
+    components.html(html, height=560, scrolling=True)

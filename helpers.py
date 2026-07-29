@@ -33,6 +33,12 @@ STATUS_COLORS = {
     STATUS_ACTIVE: "#219044",  # brand green — active / paid
 }
 
+# Total tuition owed per student per academic year, registration fee included.
+# "آخر" (miscellaneous) payments are NOT counted toward this — they're treated
+# as separate one-off charges outside the yearly tuition.
+ANNUAL_TUITION = 3500.0
+TUITION_PAYMENT_TYPES = ("رسوم تسجيل", "أقساط تعليمية")
+
 
 # ------------------------------------------------------------------ dates --
 def calculate_age(birth_date_str):
@@ -88,6 +94,26 @@ def refresh_registration_status(conn, registration_id):
     )
     conn.commit()
     return new_status
+
+
+def compute_paid_toward_tuition(conn, registration_id):
+    """Sum of payments that count toward the yearly tuition (registration
+    fee + installments) — excludes 'آخر' (miscellaneous) payments."""
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in TUITION_PAYMENT_TYPES)
+    cur.execute(
+        f"SELECT COALESCE(SUM(amount),0) AS s FROM payments "
+        f"WHERE registration_id = ? AND payment_for IN ({placeholders})",
+        (registration_id, *TUITION_PAYMENT_TYPES)
+    )
+    return float(cur.fetchone()["s"])
+
+
+def compute_remaining_balance(conn, registration_id):
+    """How much of the ANNUAL_TUITION is still owed for this registration
+    (never negative — an overpayment just shows as 0 remaining)."""
+    paid = compute_paid_toward_tuition(conn, registration_id)
+    return max(ANNUAL_TUITION - paid, 0.0)
 
 
 def format_money(amount):
