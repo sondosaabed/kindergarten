@@ -1,6 +1,7 @@
 """
 helpers.py — shared lookup lists, calculations and small business-logic
 functions used across the app.
+Updated for PostgreSQL `%s` placeholders.
 """
 
 from datetime import datetime, date
@@ -33,6 +34,7 @@ STATUS_COLORS = {
     STATUS_ACTIVE: "#219044",  # brand green — active / paid
 }
 
+# Total tuition owed per student per academic year, registration fee included.
 ANNUAL_TUITION = 3500.0
 TUITION_PAYMENT_TYPES = ("رسوم تسجيل", "أقساط تعليمية")
 
@@ -70,17 +72,18 @@ def now_str():
 # --------------------------------------------------------------- business --
 def compute_registration_status(conn, registration_id):
     """
-    Computes status based on whether a registration fee was paid.
-    Uses PostgreSQL '%s' placeholders.
+    A registration starts as 'مسجل جديد' and becomes 'منتظم' the moment
+    a registration-fee payment (رسوم تسجيل) has been recorded against it.
+    Updated for PostgreSQL %s placeholders.
     """
     cur = conn.cursor()
     cur.execute(
         "SELECT COUNT(*) AS c FROM payments WHERE registration_id = %s AND payment_for = %s",
         (registration_id, "رسوم تسجيل")
     )
-    row = cur.fetchone()
+    res = cur.fetchone()
     cur.close()
-    has_reg_fee = row["c"] > 0 if row else False
+    has_reg_fee = (res["c"] > 0) if res else False
     return STATUS_ACTIVE if has_reg_fee else STATUS_NEW
 
 
@@ -97,20 +100,22 @@ def refresh_registration_status(conn, registration_id):
 
 
 def compute_paid_toward_tuition(conn, registration_id):
-    """Sum of payments toward yearly tuition using PostgreSQL placeholders."""
+    """Sum of payments that count toward the yearly tuition (registration
+    fee + installments) — excludes 'آخر' (miscellaneous) payments."""
     cur = conn.cursor()
     placeholders = ",".join("%s" for _ in TUITION_PAYMENT_TYPES)
     cur.execute(
-        f"SELECT COALESCE(SUM(amount), 0) AS s FROM payments "
+        f"SELECT COALESCE(SUM(amount),0) AS s FROM payments "
         f"WHERE registration_id = %s AND payment_for IN ({placeholders})",
         (registration_id, *TUITION_PAYMENT_TYPES)
     )
-    row = cur.fetchone()
+    res = cur.fetchone()
     cur.close()
-    return float(row["s"]) if row else 0.0
+    return float(res["s"]) if res else 0.0
 
 
 def compute_remaining_balance(conn, registration_id):
+    """How much of the ANNUAL_TUITION is still owed for this registration."""
     paid = compute_paid_toward_tuition(conn, registration_id)
     return max(ANNUAL_TUITION - paid, 0.0)
 
