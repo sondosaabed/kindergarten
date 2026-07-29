@@ -8,6 +8,7 @@ other page with the default/secondary look, which reads as a proper
 buttons by position.
 """
 
+import pandas as pd
 import streamlit as st
 
 import ui
@@ -43,16 +44,20 @@ def render(conn):
         </div>
         """, unsafe_allow_html=True)
 
-        # Extract counts cleanly using named alias 'total'
-        students_count_df = ui.df(conn, "SELECT COUNT(*) AS total FROM students")
-        students_count = int(students_count_df.iloc[0]['total']) if not students_count_df.empty else 0
+        # Safe positional extraction (.iloc[0, 0])
+        students_count_df = ui.df(conn, "SELECT COUNT(*) FROM students")
+        students_count = 0
+        if not students_count_df.empty and pd.notna(students_count_df.iloc[0, 0]):
+            students_count = int(students_count_df.iloc[0, 0])
 
         month_revenue_df = ui.df(conn, """
-            SELECT COALESCE(SUM(amount), 0) AS total 
+            SELECT COALESCE(SUM(amount), 0) 
             FROM payments 
             WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
         """)
-        month_revenue = float(month_revenue_df.iloc[0]['total']) if not month_revenue_df.empty else 0.0
+        month_revenue = 0.0
+        if not month_revenue_df.empty and pd.notna(month_revenue_df.iloc[0, 0]):
+            month_revenue = float(month_revenue_df.iloc[0, 0])
 
         st.markdown(f"""
         <div class="sidebar-stat">👦 عدد الطلاب <b>{students_count}</b></div>
