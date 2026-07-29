@@ -48,7 +48,7 @@ def render(conn):
         st.session_state.current_page = NAV_ITEMS[0][0]
 
     with st.sidebar:
-        ui.render_logo(width=120)
+        ui.render_logo(width=200)
 
         st.markdown("""
         <div class="brand-box" style="border-top:none;">
