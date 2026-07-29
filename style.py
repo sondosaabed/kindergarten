@@ -491,5 +491,22 @@ div[data-testid="stForm"] input::placeholder {
         min-height: 44px;
     }
 }
+
+/* Force Streamlit markdown containers and headings to align right */
+div[data-testid="stMarkdownContainer"],
+div[data-testid="stMarkdownContainer"] > div[data-testid="stHeadingWithHeadline"] {
+    text-align: right !important;
+}
+
+div[data-testid="stHeadingWithHeadline"] > h1,
+div[data-testid="stHeadingWithHeadline"] > h2,
+div[data-testid="stHeadingWithHeadline"] > h3,
+div[data-testid="stHeadingWithHeadline"] > h4,
+div[data-testid="stHeadingWithHeadline"] > h5,
+div[data-testid="stHeadingWithHeadline"] > h6 {
+    justify-content: flex-start !important; /* In RTL flex mode, flex-start puts the content on the right */
+    text-align: right !important;
+    width: 100% !important;
+}
 </style>
 """
