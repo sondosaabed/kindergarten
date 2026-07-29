@@ -163,12 +163,12 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* SIDEBAR STYLING & COLLAPSED BLEED FIX                            */
+/* MODERN GLASSMORPHIC SIDEBAR STYLING                              */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, var(--primary-dark) 0%, #022C22 100%);
+    background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
     direction: RTL;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
     overflow: hidden !important;
 }
 
@@ -181,6 +181,7 @@ section[data-testid="stSidebar"][data-collapsed="true"] * {
     opacity: 0 !important;
 }
 
+/* Sidebar Text Color Fixes */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -188,7 +189,7 @@ section[data-testid="stSidebar"] p,
 section[data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] .stMarkdown {
-    color: #FFFFFF;
+    color: rgba(255, 255, 255, 0.9) !important;
     font-family: 'Cairo', sans-serif !important;
 }
 
@@ -211,19 +212,21 @@ section[data-testid="stSidebar"] .stMarkdown {
 .brand-box p {
     margin: 4px 0 0 0;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
     font-family: 'Cairo', sans-serif !important;
 }
 
-.sidebar-stat {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin-bottom: 10px;
-    font-size: 13px;
+/* Sidebar Top Cards & Metrics */
+.sidebar-stat,
+section[data-testid="stSidebar"] [data-testid="stMetric"] {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 10px !important;
+    font-size: 13px !important;
     color: #FFFFFF !important;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px) !important;
     font-family: 'Cairo', sans-serif !important;
 }
 
@@ -234,46 +237,74 @@ section[data-testid="stSidebar"] .stMarkdown {
     font-family: 'Cairo', sans-serif !important;
 }
 
-section[data-testid="stSidebar"] .stButton > button {
-    text-align: right;
-    justify-content: flex-start;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-family: 'Cairo', sans-serif !important;
-    transition: all 0.2s ease;
-    width: 100%;
+/* Sidebar Navigation Buttons Container */
+section[data-testid="stSidebar"] .stButton {
+    margin-bottom: 6px !important;
 }
 
+/* Inactive Navigation Buttons (Translucent Glass Effect) */
+section[data-testid="stSidebar"] .stButton > button,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-    background: #FFFFFF !important;
-    color: var(--text-main) !important;
-    border: 1px solid #E7E5E4 !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #E2E8F0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    text-align: right !important;
+    justify-content: flex-start !important;
+    padding: 10px 16px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    font-family: 'Cairo', sans-serif !important;
+    height: 44px !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
-    color: var(--text-main) !important;
+    color: #E2E8F0 !important;
     font-family: 'Cairo', sans-serif !important;
 }
 
+/* Hover State for Inactive Buttons */
+section[data-testid="stSidebar"] .stButton > button:hover,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-    background: #F5F5F4 !important;
-    border-color: #D6D3D1 !important;
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateX(-3px) !important;
 }
 
+section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
+    color: #FFFFFF !important;
+}
+
+/* Active Navigation Button (Highlight Gradient) */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: var(--primary) !important;
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
     color: #FFFFFF !important;
     border: none !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    border-radius: 12px !important;
+    text-align: right !important;
+    justify-content: flex-start !important;
+    padding: 10px 16px !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    font-family: 'Cairo', sans-serif !important;
+    height: 44px !important;
+    width: 100% !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
     color: #FFFFFF !important;
     font-family: 'Cairo', sans-serif !important;
+}
+
+section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateX(-3px) !important;
 }
 
 section[data-testid="stSidebar"] img {
@@ -331,7 +362,7 @@ div[data-testid="stDataFrame"] {
     align-items: flex-start;
     text-align: right;
     flex: 1;
-    min-width: 0; /* Ensures container shrinks properly without pushing text under the icon */
+    min-width: 0;
 }
 
 .kpi-value {
