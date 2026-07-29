@@ -1,8 +1,7 @@
 """
 sections/registration.py — التسجيل المدرسي
 
-Registers a student into a class for a given academic year. Requires at
-least one student, one class and one academic year to already exist.
+Registers a student into a class for a given academic year.
 """
 
 import streamlit as st
@@ -44,15 +43,22 @@ def render(conn):
             if submitted:
                 sid = student_options[student_label]
                 cid = class_options[class_label]
-                existing = ui.df(conn, "SELECT 1 FROM registrations WHERE student_id=? AND year_id=?", (sid, year_label))
+                existing = ui.df(
+                    conn,
+                    "SELECT 1 FROM registrations WHERE student_id=%s AND year_id=%s",
+                    (sid, year_label)
+                )
                 if not existing.empty:
                     st.error("هذا الطالب مسجل مسبقاً في هذه السنة الدراسية.")
                 else:
-                    conn.execute('''
+                    cur = conn.cursor()
+                    cur.execute('''
                         INSERT INTO registrations (student_id, class_id, year_id, status, registration_date)
-                        VALUES (?,?,?,?,?)
+                        VALUES (%s, %s, %s, %s, %s)
                     ''', (sid, cid, year_label, H.STATUS_NEW, H.today_str()))
                     conn.commit()
+                    cur.close()
+
                     st.success(f"تم تسجيل «{student_label.split(' — ')[0]}» بنجاح! الحالة الحالية: {H.STATUS_NEW}. "
                                "توجّه إلى صفحة «الدفعات المالية» لتحصيل رسوم التسجيل.")
                     st.rerun()
@@ -73,7 +79,7 @@ def render(conn):
         if regs.empty:
             ui.empty_state("لا توجد تسجيلات بعد.")
         else:
-            regs["المبلغ المتبقي"] = (H.ANNUAL_TUITION - regs["paid_toward_tuition"]).clip(lower=0)
+            regs["المبلغ المتبقي"] = (H.ANNUAL_TUITION - regs["paid_toward_tuition"].astype(float)).clip(lower=0)
             regs = regs.drop(columns=["paid_toward_tuition"])
 
             f1, f2 = st.columns(2)
