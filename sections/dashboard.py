@@ -1,45 +1,45 @@
 """
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
-Optimized performance with explicit Arabic KPI binding and safe positional metric fetches.
+Uses direct cursor evaluation for KPI values to prevent pandas DataFrame conversion errors.
 """
 
-import pandas as pd
 import streamlit as st
 import ui
 import helpers as H
 
 
-def _safe_int(df):
-    if not df.empty and pd.notna(df.iloc[0, 0]):
-        try:
-            return int(df.iloc[0, 0])
-        except (ValueError, TypeError):
+def _get_scalar(conn, query, params=()):
+    """Executes a scalar SQL query directly via cursor safely."""
+    try:
+        cur = conn.cursor()
+        cur.execute(query, params)
+        res = cur.fetchone()
+        cur.close()
+        if res is None:
             return 0
-    return 0
-
-
-def _safe_float(df):
-    if not df.empty and pd.notna(df.iloc[0, 0]):
-        try:
-            return float(df.iloc[0, 0])
-        except (ValueError, TypeError):
-            return 0.0
-    return 0.0
+        if isinstance(res, dict):
+            val = list(res.values())[0]
+        elif isinstance(res, (tuple, list)):
+            val = res[0]
+        else:
+            val = res
+        return val if val is not None else 0
+    except Exception:
+        return 0
 
 
 def render(conn):
     ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
-    # Fetch aggregate counts safely
-    total_students = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM students"))
-    total_teachers = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM teachers"))
-    total_classes = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM classes"))
-    total_revenue = _safe_float(ui.df(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
-    pending = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
+    # Fetch KPI metrics directly
+    total_students = int(_get_scalar(conn, "SELECT COUNT(*) FROM students"))
+    total_teachers = int(_get_scalar(conn, "SELECT COUNT(*) FROM teachers"))
+    total_classes = int(_get_scalar(conn, "SELECT COUNT(*) FROM classes"))
+    total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
+    pending = int(_get_scalar(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
-    # Calculate remaining balance using PostgreSQL safely
-    outstanding_df = ui.df(conn, """
+    total_outstanding = float(_get_scalar(conn, """
         SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0)
         FROM registrations r
         LEFT JOIN (
@@ -49,9 +49,7 @@ def render(conn):
             GROUP BY registration_id
         ) p ON p.registration_id = r.registration_id
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
-    """, (H.ANNUAL_TUITION,))
-
-    total_outstanding = _safe_float(outstanding_df)
+    """, (H.ANNUAL_TUITION,)))
 
     # Render KPI Cards in Arabic
     c1, c2, c3, c4, c5, c6 = st.columns(6)
