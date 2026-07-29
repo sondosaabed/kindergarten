@@ -6,7 +6,6 @@ The active page is rendered with type="primary" (brand-colored) and every
 other page with the default/secondary look, which reads as a proper
 "selected tab" without any fragile custom CSS targeting individual
 buttons by position.
-Updated for PostgreSQL date formatting syntax.
 """
 
 import streamlit as st
@@ -44,16 +43,16 @@ def render(conn):
         </div>
         """, unsafe_allow_html=True)
 
-        students_count_df = ui.df(conn, "SELECT COUNT(*) AS c FROM students")
-        students_count = students_count_df.iloc[0]['c'] if not students_count_df.empty else 0
+        # Extract counts cleanly using named alias 'total'
+        students_count_df = ui.df(conn, "SELECT COUNT(*) AS total FROM students")
+        students_count = int(students_count_df.iloc[0]['total']) if not students_count_df.empty else 0
 
-        # PostgreSQL syntax: TO_CHAR instead of strftime
         month_revenue_df = ui.df(conn, """
-            SELECT COALESCE(SUM(amount), 0) AS s 
+            SELECT COALESCE(SUM(amount), 0) AS total 
             FROM payments 
             WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
         """)
-        month_revenue = month_revenue_df.iloc[0]['s'] if not month_revenue_df.empty else 0.0
+        month_revenue = float(month_revenue_df.iloc[0]['total']) if not month_revenue_df.empty else 0.0
 
         st.markdown(f"""
         <div class="sidebar-stat">👦 عدد الطلاب <b>{students_count}</b></div>
