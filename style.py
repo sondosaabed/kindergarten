@@ -496,5 +496,11 @@ div[data-testid="stForm"] input::placeholder {
     opacity: 0.6 !important;
 }
 
+/* Sidebar Logo Size */
+section[data-testid="stSidebar"] img {
+    max-width: 140px !important; /* Adjust size here (e.g., 140px or 160px) */
+    height: auto !important;
+}
+
 </style>
 """
