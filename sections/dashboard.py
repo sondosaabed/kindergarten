@@ -1,12 +1,10 @@
 """
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
-Optimized for high performance with batch SQL queries.
-Top-level KPIs, revenue trend, class distribution and recent activity.
+Optimized performance with explicit Arabic KPI binding and direct metric fetches.
 """
 
 import streamlit as st
-
 import ui
 import helpers as H
 
@@ -14,28 +12,20 @@ import helpers as H
 def render(conn):
     ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
-    # Single batch query to calculate key counts and sums in one round-trip
-    summary_df = ui.df(conn, """
-        SELECT 
-            (SELECT COUNT(*) FROM students) AS total_students,
-            (SELECT COUNT(*) FROM teachers) AS total_teachers,
-            (SELECT COUNT(*) FROM classes) AS total_classes,
-            (SELECT COALESCE(SUM(amount), 0) FROM payments) AS total_revenue,
-            (SELECT COUNT(*) FROM registrations WHERE status = %s) AS pending_regs
-    """, (H.STATUS_NEW,))
+    # Fetch metrics directly with explicit column aliases
+    students_df = ui.df(conn, "SELECT COUNT(*) AS total FROM students")
+    teachers_df = ui.df(conn, "SELECT COUNT(*) AS total FROM teachers")
+    classes_df = ui.df(conn, "SELECT COUNT(*) AS total FROM classes")
+    revenue_df = ui.df(conn, "SELECT COALESCE(SUM(amount), 0) AS total FROM payments")
+    pending_df = ui.df(conn, "SELECT COUNT(*) AS total FROM registrations WHERE status = %s", (H.STATUS_NEW,))
 
-    if not summary_df.empty:
-        row = summary_df.iloc[0]
-        total_students = row['total_students']
-        total_teachers = row['total_teachers']
-        total_classes = row['total_classes']
-        total_revenue = row['total_revenue']
-        pending = row['pending_regs']
-    else:
-        total_students = total_teachers = total_classes = pending = 0
-        total_revenue = 0.0
+    total_students = int(students_df.iloc[0]['total']) if not students_df.empty else 0
+    total_teachers = int(teachers_df.iloc[0]['total']) if not teachers_df.empty else 0
+    total_classes = int(classes_df.iloc[0]['total']) if not classes_df.empty else 0
+    total_revenue = float(revenue_df.iloc[0]['total']) if not revenue_df.empty else 0.0
+    pending = int(pending_df.iloc[0]['total']) if not pending_df.empty else 0
 
-    # Optimized SQL aggregation to calculate outstanding balances directly in DB
+    # Calculate remaining balance using PostgreSQL
     outstanding_df = ui.df(conn, """
         SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0) AS total_outstanding
         FROM registrations r
@@ -47,17 +37,17 @@ def render(conn):
         ) p ON p.registration_id = r.registration_id
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """, (H.ANNUAL_TUITION,))
-    
-    total_outstanding = outstanding_df.iloc[0]['total_outstanding'] if not outstanding_df.empty else 0.0
 
-    # Render KPI Cards
+    total_outstanding = float(outstanding_df.iloc[0]['total_outstanding']) if not outstanding_df.empty else 0.0
+
+    # Render KPI Cards in Arabic
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, "#E9F5EC", "#219044")
     ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, "#FBF3E3", "#D7A431")
     ui.kpi(c3, "🏷️", "الصفوف", total_classes, "#E9F5EC", "#163D22")
     ui.kpi(c4, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), "#FDECEC", "#E62031")
     ui.kpi(c5, "⏳", "بانتظار رسوم التسجيل", pending, "#FBF3E3", "#B4790C")
-    ui.kpi(c6, "🧾", "إجمالي المتبقي (السنة الحالية)", H.format_money(total_outstanding), "#FDECEC", "#E62031")
+    ui.kpi(c6, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), "#FDECEC", "#E62031")
 
     st.write("")
     left, right = st.columns([1.3, 1])
@@ -71,11 +61,11 @@ def render(conn):
                 GROUP BY TO_CHAR(payment_date::date, 'YYYY-MM')
                 ORDER BY TO_CHAR(payment_date::date, 'YYYY-MM') DESC
                 LIMIT 6
-            """).sort_values("الشهر")
+            """)
             if rev.empty:
                 ui.empty_state("لا توجد مقبوضات مسجلة بعد.")
             else:
-                st.bar_chart(rev.set_index("الشهر"))
+                st.bar_chart(rev.sort_values("الشهر").set_index("الشهر"))
 
     with right:
         with st.container(border=True):
