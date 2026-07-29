@@ -33,9 +33,6 @@ STATUS_COLORS = {
     STATUS_ACTIVE: "#219044",  # brand green — active / paid
 }
 
-# Total tuition owed per student per academic year, registration fee included.
-# "آخر" (miscellaneous) payments are NOT counted toward this — they're treated
-# as separate one-off charges outside the yearly tuition.
 ANNUAL_TUITION = 3500.0
 TUITION_PAYMENT_TYPES = ("رسوم تسجيل", "أقساط تعليمية")
 
@@ -73,45 +70,47 @@ def now_str():
 # --------------------------------------------------------------- business --
 def compute_registration_status(conn, registration_id):
     """
-    A registration starts as 'مسجل جديد' and becomes 'منتظم' the moment
-    a registration-fee payment (رسوم تسجيل) has been recorded against it.
-    Recomputed from payment history so it can never drift out of sync.
+    Computes status based on whether a registration fee was paid.
+    Uses PostgreSQL '%s' placeholders.
     """
     cur = conn.cursor()
     cur.execute(
-        "SELECT COUNT(*) AS c FROM payments WHERE registration_id = ? AND payment_for = ?",
+        "SELECT COUNT(*) AS c FROM payments WHERE registration_id = %s AND payment_for = %s",
         (registration_id, "رسوم تسجيل")
     )
-    has_reg_fee = cur.fetchone()["c"] > 0
+    row = cur.fetchone()
+    cur.close()
+    has_reg_fee = row["c"] > 0 if row else False
     return STATUS_ACTIVE if has_reg_fee else STATUS_NEW
 
 
 def refresh_registration_status(conn, registration_id):
     new_status = compute_registration_status(conn, registration_id)
-    conn.execute(
-        "UPDATE registrations SET status = ? WHERE registration_id = ?",
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE registrations SET status = %s WHERE registration_id = %s",
         (new_status, registration_id)
     )
     conn.commit()
+    cur.close()
     return new_status
 
 
 def compute_paid_toward_tuition(conn, registration_id):
-    """Sum of payments that count toward the yearly tuition (registration
-    fee + installments) — excludes 'آخر' (miscellaneous) payments."""
+    """Sum of payments toward yearly tuition using PostgreSQL placeholders."""
     cur = conn.cursor()
-    placeholders = ",".join("?" for _ in TUITION_PAYMENT_TYPES)
+    placeholders = ",".join("%s" for _ in TUITION_PAYMENT_TYPES)
     cur.execute(
-        f"SELECT COALESCE(SUM(amount),0) AS s FROM payments "
-        f"WHERE registration_id = ? AND payment_for IN ({placeholders})",
+        f"SELECT COALESCE(SUM(amount), 0) AS s FROM payments "
+        f"WHERE registration_id = %s AND payment_for IN ({placeholders})",
         (registration_id, *TUITION_PAYMENT_TYPES)
     )
-    return float(cur.fetchone()["s"])
+    row = cur.fetchone()
+    cur.close()
+    return float(row["s"]) if row else 0.0
 
 
 def compute_remaining_balance(conn, registration_id):
-    """How much of the ANNUAL_TUITION is still owed for this registration
-    (never negative — an overpayment just shows as 0 remaining)."""
     paid = compute_paid_toward_tuition(conn, registration_id)
     return max(ANNUAL_TUITION - paid, 0.0)
 
