@@ -42,7 +42,7 @@ def check_authentication():
                 <h2>روضة مؤسسة شباب البيرة</h2>
                 <p class="subtitle-en">Al-Bireh Youth Foundation Kindergarten</p>
                 <div class="login-badge-wrapper">
-                    <span class="login-badge">تسجيل دخول المديرة / المدير 🔐</span>
+                    <span class="login-badge">تسجيل دخول المديرة 🔐</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
