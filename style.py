@@ -1,5 +1,5 @@
 """
-style.py — Central CSS for Streamlit App. Professional RTL layout with clean Cairo font everywhere.
+style.py — Central CSS for Streamlit App with Cairo typography, RTL support, and Modern Card Design.
 """
 
 CSS = """
@@ -13,7 +13,7 @@ CSS = """
     /* Main Brand Colors (Fresh Emerald & Dark Slate) */
     --primary: #10B981;
     --primary-dark: #064E3B;
-    --primary-light: #D1FAE5;
+    --primary-light: #ECFDF5;
     
     /* Modern Kindergarten Warm Palette */
     --coral-pink: #F43F5E;
@@ -21,16 +21,16 @@ CSS = """
     --soft-sky: #3B82F6;
     
     /* Neutrals & Surfaces */
-    --bg: #FAFAF9;
+    --bg: #F8FAFC;
     --card-bg: #FFFFFF;
-    --card-border: #E7E5E4;
-    --text-main: #1C1917;
-    --text-muted: #78716C;
+    --card-border: #E2E8F0;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
     
     /* Elevation Shadows */
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 12px -2px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* ---------------------------------------------------------------- */
@@ -64,6 +64,109 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
+/* LOGIN PAGE & CARD CONTAINER STYLING                              */
+/* ---------------------------------------------------------------- */
+
+/* Login Logo Centering */
+.login-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.login-logo img {
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    padding: 6px;
+    background: #FFFFFF;
+    border: 1px solid var(--card-border);
+}
+
+/* Header Text Alignments inside Login Box */
+.login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.login-header h2 {
+    font-size: 24px;
+    font-weight: 800 !important;
+    color: var(--primary-dark);
+    margin: 0 0 4px 0;
+}
+
+.login-header p.sub-en {
+    font-size: 13px;
+    color: var(--text-muted);
+    direction: ltr;
+    margin: 0 0 12px 0;
+    font-weight: 500;
+}
+
+.login-badge {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Form Container Refinement: Remove double borders */
+div[data-testid="stForm"] {
+    background: var(--card-bg) !important;
+    border-radius: 20px !important;
+    padding: 32px 28px !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: var(--shadow-xl) !important;
+}
+
+/* Input Fields inside Forms */
+div[data-testid="stForm"] div[data-baseweb="input"] {
+    border-radius: 12px !important;
+    background-color: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+div[data-testid="stForm"] div[data-baseweb="input"]:focus-within {
+    border-color: var(--primary) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+div[data-testid="stForm"] label {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
+    margin-bottom: 6px !important;
+}
+
+/* Submit Button in Form */
+div[data-testid="stForm"] .stButton > button {
+    background: var(--primary) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 12px !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+}
+
+div[data-testid="stForm"] .stButton > button:hover {
+    background: var(--primary-dark) !important;
+    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------------------- */
 /* STREAMLIT NATIVE HEADINGS FIX (Anchors & Titles Alignment)      */
 /* ---------------------------------------------------------------- */
 div[data-testid="stHeadingWithHeadline"] {
@@ -89,77 +192,9 @@ div[data-testid="stHeadingWithHeadline"] > h6 {
     margin-bottom: 8px;
 }
 
-/* Hide or push Streamlit anchor link icon out of the way */
 div[data-testid="stHeadingWithHeadline"] a {
     order: 2 !important;
     opacity: 0.3;
-    transition: opacity 0.2s ease;
-}
-
-div[data-testid="stHeadingWithHeadline"]:hover a {
-    opacity: 1;
-}
-
-/* ---------------------------------------------------------------- */
-/* SECTION TITLES & SUBTITLES IN CAIRO                              */
-/* ---------------------------------------------------------------- */
-.section-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 26px;
-    font-weight: 800 !important;
-    font-family: 'Cairo', sans-serif !important;
-    color: var(--primary-dark);
-    margin-bottom: 4px;
-    text-align: center;
-}
-
-.section-sub {
-    color: var(--text-muted);
-    margin-bottom: 24px;
-    font-size: 15px;
-    font-weight: 600 !important;
-    font-family: 'Cairo', sans-serif !important;
-    text-align: center;
-}
-
-/* ---------------------------------------------------------------- */
-/* TABS STYLING FIXES                                               */
-/* ---------------------------------------------------------------- */
-div[data-testid="stTabs"] {
-    direction: rtl !important;
-}
-
-div[data-baseweb="tab-list"] {
-    gap: 8px;
-    background-color: transparent;
-    border-bottom: 2px solid var(--card-border);
-    justify-content: flex-start;
-}
-
-button[data-baseweb="tab"] {
-    height: 44px;
-    padding: 8px 18px;
-    border-radius: 10px 10px 0 0 !important;
-    font-weight: 700 !important;
-    font-size: 15px !important;
-    font-family: 'Cairo', sans-serif !important;
-    color: var(--text-muted) !important;
-    background-color: transparent !important;
-    transition: all 0.2s ease;
-}
-
-button[data-baseweb="tab"]:hover {
-    color: var(--primary) !important;
-    background-color: var(--primary-light) !important;
-}
-
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: var(--primary-dark) !important;
-    border-bottom: 3px solid var(--primary) !important;
-    background-color: #FFFFFF !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -181,218 +216,12 @@ section[data-testid="stSidebar"][data-collapsed="true"] * {
     opacity: 0 !important;
 }
 
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] .stMarkdown {
-    color: #FFFFFF;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.brand-box {
-    text-align: center;
-    padding: 12px 8px 20px 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    margin-bottom: 18px;
-}
-
-.brand-box h2 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 800;
-    color: #FFFFFF !important;
-    letter-spacing: -0.3px;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.brand-box p {
-    margin: 4px 0 0 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8) !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.sidebar-stat {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin-bottom: 10px;
-    font-size: 13px;
-    color: #FFFFFF !important;
-    backdrop-filter: blur(4px);
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.sidebar-stat b {
-    font-size: 17px;
-    display: block;
-    color: var(--primary-light) !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-section[data-testid="stSidebar"] .stButton > button {
-    text-align: right;
-    justify-content: flex-start;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-family: 'Cairo', sans-serif !important;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-    background: #FFFFFF !important;
-    color: var(--text-main) !important;
-    border: 1px solid #E7E5E4 !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
-    color: var(--text-main) !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-    background: #F5F5F4 !important;
-    border-color: #D6D3D1 !important;
-    transform: translateY(-1px);
-}
-
-section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: var(--primary) !important;
-    color: #FFFFFF !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-}
-
-section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
-    color: #FFFFFF !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-/* ---------------------------------------------------------------- */
-/* CONTAINERS, DATAFRAMES & FORM ELEMENTS                           */
-/* ---------------------------------------------------------------- */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: var(--card-bg);
-    border-radius: 16px !important;
-    border: 1px solid var(--card-border) !important;
-    box-shadow: var(--shadow-sm);
-    padding: 12px;
-    margin-bottom: 16px;
-}
-
-div[data-testid="stDataFrame"] {
-    direction: rtl !important;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-}
-
-/* KPI Cards */
-.kpi-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 18px 20px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--card-border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.kpi-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
-    background: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-.kpi-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text-main);
-    line-height: 1.1;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.kpi-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-/* Form inputs styling */
-div[data-testid="stForm"] {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 22px 24px;
-    border: 1px solid var(--card-border);
-    box-shadow: var(--shadow-sm);
-}
-
-.stButton > button {
-    border-radius: 10px;
-    font-weight: 700;
-    font-family: 'Cairo', sans-serif !important;
-    transition: all 0.2s ease;
-}
-
-.stButton > button[kind="primary"] {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #FFFFFF;
-}
-
-.stButton > button[kind="primary"]:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-}
-
 /* ---------------------------------------------------------------- */
 /* MOBILE RESPONSIVENESS                                            */
 /* ---------------------------------------------------------------- */
 @media (max-width: 768px) {
-    .block-container {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        padding-top: 1rem !important;
-    }
-
-    .section-title { font-size: 20px; gap: 8px; }
-    .section-sub { font-size: 13px; margin-bottom: 14px; }
-
-    .kpi-card {
-        padding: 14px 16px;
-        border-radius: 14px;
-        gap: 12px;
-    }
-    .kpi-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 10px; }
-    .kpi-value { font-size: 18px; }
-    .kpi-label { font-size: 12px; }
-
-    .stButton > button {
-        width: 100%;
-        min-height: 44px;
+    div[data-testid="stForm"] {
+        padding: 24px 18px !important;
     }
 }
 </style>
