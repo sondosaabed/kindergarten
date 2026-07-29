@@ -93,11 +93,15 @@ def render(conn):
                 ui.empty_state("لا توجد مقبوضات مسجلة بعد.")
             else:
                 rev_sorted = rev.sort_values("الشهر")
+                # Force "الشهر" to categorical string to prevent datetime microsecond axis parsing
+                rev_sorted["الشهر"] = rev_sorted["الشهر"].astype(str)
+                
                 fig_rev = px.bar(
                     rev_sorted,
                     x="الشهر",
                     y="المبلغ",
-                    text_auto=True
+                    text_auto=True,
+                    height=280
                 )
                 fig_rev.update_traces(
                     marker_color="#10B981",
@@ -108,10 +112,11 @@ def render(conn):
                 fig_rev.update_layout(
                     xaxis_title="",
                     yaxis_title="",
+                    xaxis=dict(type='category'),
                     margin=dict(l=10, r=10, t=25, b=10),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(size=12)
+                    font=dict(family="Cairo", size=12)
                 )
                 st.plotly_chart(fig_rev, use_container_width=True, config={"displayModeBar": False})
 
@@ -128,11 +133,14 @@ def render(conn):
             if dist.empty:
                 ui.empty_state("لا توجد صفوف بعد.")
             else:
+                dist["الصف"] = dist["الصف"].astype(str)
+                
                 fig_dist = px.bar(
                     dist,
                     x="الصف",
                     y="العدد",
-                    text_auto=True
+                    text_auto=True,
+                    height=280
                 )
                 fig_dist.update_traces(
                     marker_color="#0284C7",
@@ -143,10 +151,12 @@ def render(conn):
                 fig_dist.update_layout(
                     xaxis_title="",
                     yaxis_title="",
+                    xaxis=dict(type='category'),
+                    yaxis=dict(dtick=1), # Whole numbers only (prevents 0.2, 0.4 decimals)
                     margin=dict(l=10, r=10, t=25, b=10),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(size=12)
+                    font=dict(family="Cairo", size=12)
                 )
                 st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
 
@@ -171,11 +181,9 @@ def render(conn):
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "الحالة": st.column_config.SelectboxColumn(
+                    "الحالة": st.column_config.TextColumn(
                         "الحالة",
-                        width="small",
-                        required=True,
-                        options=["منتظم", "جديد", "معلق"],
+                        help="حالة الطالب الحالية"
                     )
                 }
             )
