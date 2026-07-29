@@ -1,4 +1,6 @@
-"""style.py — Central CSS for Streamlit App. Professional RTL layout with a warm, modern palette."""
+"""
+style.py — Central CSS for Streamlit App. Professional RTL layout with a warm, modern palette.
+"""
 
 CSS = """
 <style>
@@ -63,7 +65,43 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* Sidebar Styling                                                 */
+/* Tabs Styling Fixes (RTL Alignment & Active Highlighting)        */
+/* ---------------------------------------------------------------- */
+div[data-testid="stTabs"] {
+    direction: rtl !important;
+}
+
+div[data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: transparent;
+    border-bottom: 2px solid var(--card-border);
+    justify-content: flex-start;
+}
+
+button[data-baseweb="tab"] {
+    height: 44px;
+    padding: 8px 18px;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    color: var(--text-muted) !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease;
+}
+
+button[data-baseweb="tab"]:hover {
+    color: var(--primary) !important;
+    background-color: var(--primary-light) !important;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: var(--primary-dark) !important;
+    border-bottom: 3px solid var(--primary) !important;
+    background-color: #FFFFFF !important;
+}
+
+/* ---------------------------------------------------------------- */
+/* Sidebar Styling                                                  */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, var(--primary-dark) 0%, #022C22 100%);
@@ -71,7 +109,6 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Target general sidebar text without overriding icon elements */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -82,7 +119,6 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: #FFFFFF;
 }
 
-/* Sidebar Brand Header */
 .brand-box {
     text-align: center;
     padding: 12px 8px 20px 8px;
@@ -104,7 +140,6 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Sidebar Stats & Info Badges */
 .sidebar-stat {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -122,7 +157,6 @@ section[data-testid="stSidebar"] .stMarkdown {
     color: var(--primary-light) !important;
 }
 
-/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton > button {
     text-align: right;
     justify-content: flex-start;
@@ -134,7 +168,6 @@ section[data-testid="stSidebar"] .stButton > button {
     width: 100%;
 }
 
-/* Inactive/Secondary Sidebar Buttons */
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: #FFFFFF !important;
     color: var(--text-main) !important;
@@ -152,7 +185,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     transform: translateY(-1px);
 }
 
-/* Active/Primary Sidebar Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     background: var(--primary) !important;
     color: #FFFFFF !important;
@@ -165,12 +197,14 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
 }
 
 /* ---------------------------------------------------------------- */
-/* Content Headings & Titles                                        */
+/* Content Headings & Titles Alignment Fix                         */
 /* ---------------------------------------------------------------- */
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-main);
     font-weight: 700;
     text-align: right;
+    margin-top: 8px;
+    margin-bottom: 12px;
 }
 
 .section-title {
@@ -178,57 +212,37 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
-    color: var(--text-main);
+    color: var(--primary-dark);
     margin-bottom: 4px;
     text-align: center;
 }
 
 .section-sub {
     color: var(--text-muted);
-    margin-bottom: 20px;
-    font-size: 14px;
+    margin-bottom: 24px;
+    font-size: 15px;
     text-align: center;
 }
 
 /* ---------------------------------------------------------------- */
-/* Containers & Card Components                                     */
+/* Containers, DataFrames & Form Elements                           */
 /* ---------------------------------------------------------------- */
-.card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 22px 24px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--card-border);
-    margin-bottom: 20px;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-/* Real bordered containers — use `with st.container(border=True):` in
-   Python instead of opening/closing a raw <div class="card"> across
-   multiple st.* calls. Streamlit renders every st.* call as its own
-   sibling element, so a div opened in one call and closed in another
-   never actually wraps what's "between" them — it just floats there
-   empty while the real content renders next to it. st.container(border=True)
-   is a real parent element, so this gives the same "card" look while
-   actually nesting the chart/table/form inside it. */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--card-bg);
     border-radius: 16px !important;
     border: 1px solid var(--card-border) !important;
     box-shadow: var(--shadow-sm);
-    padding: 6px 6px;
+    padding: 12px;
     margin-bottom: 16px;
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
-    max-width: 440px;
-    margin: 10px auto 0 auto;
-    padding: 28px 26px 18px 26px;
+
+/* Dataframe Styling for RTL text alignment */
+div[data-testid="stDataFrame"] {
+    direction: rtl !important;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
 }
 
 /* KPI Cards */
@@ -263,7 +277,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
 }
 
 .kpi-value {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     color: var(--text-main);
     line-height: 1.1;
@@ -272,46 +286,10 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
 .kpi-label {
     font-size: 13px;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
-/* Standard Badges */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    background: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-/* Receipt Display Component */
-.receipt-box {
-    background: #FFFBEB;
-    border: 2px dashed var(--amber-gold);
-    border-radius: 16px;
-    padding: 24px;
-    font-size: 15px;
-    line-height: 2;
-    box-shadow: var(--shadow-sm);
-}
-
-.receipt-box h3 {
-    margin-top: 0;
-    color: var(--primary-dark);
-    font-weight: 800;
-}
-
-.receipt-row {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px dotted #FDE68A;
-    padding: 6px 0;
-}
-
-/* Form Styles */
+/* Form inputs styling */
 div[data-testid="stForm"] {
     background: var(--card-bg);
     border-radius: 16px;
@@ -320,20 +298,9 @@ div[data-testid="stForm"] {
     box-shadow: var(--shadow-sm);
 }
 
-.required::after {
-    content: " *";
-    color: var(--coral-pink);
-}
-
-/* Streamlit Main Body Overrides */
-div[data-testid="stMetricValue"] {
-    color: var(--primary-dark);
-    font-weight: 800;
-}
-
 .stButton > button {
     border-radius: 10px;
-    font-weight: 600;
+    font-weight: 700;
     transition: all 0.2s ease;
 }
 
@@ -347,67 +314,6 @@ div[data-testid="stMetricValue"] {
     background: var(--primary-dark);
     border-color: var(--primary-dark);
     box-shadow: var(--shadow-md);
-}
-
-/* ---------------------------------------------------------------- */
-/* LOGIN SCREEN STYLING                                             */
-/* ---------------------------------------------------------------- */
-/* .login-marker is a 0px marker rendered as the first element inside
-   the login's st.container(border=True) — :has() lets us style that
-   *actual* container (see stVerticalBlockBorderWrapper rule above)
-   without touching every other bordered container in the app. */
-
-.login-header {
-    text-align: center;
-    margin-bottom: 24px;
-}
-
-.login-header h2 {
-    font-size: 22px;
-    font-weight: 800;
-    color: #1C1917;
-    margin: 12px 0 2px 0 !important;
-}
-
-.login-header .subtitle-en {
-    color: #78716C;
-    font-size: 13px;
-    margin: 0 0 8px 0;
-}
-
-.login-header .subtitle-ar {
-    color: var(--primary);
-    font-size: 14px;
-    font-weight: 700;
-    margin: 0;
-}
-
-/* Remove default form box border inside the login card (the outer
-   container already provides the card look) */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) div[data-testid="stForm"] {
-    border: none !important;
-    padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-/* Primary button styling override for the login form */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) .stButton > button[kind="primary"] {
-    background-color: var(--primary) !important;
-    border-color: var(--primary) !important;
-    color: #FFFFFF !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    height: 46px !important;
-    border-radius: 12px !important;
-    margin-top: 8px;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
-}
-
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) .stButton > button[kind="primary"]:hover {
-    background-color: var(--primary-dark) !important;
-    border-color: var(--primary-dark) !important;
-    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.3) !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -429,50 +335,12 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) .stButton > b
         gap: 12px;
     }
     .kpi-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 10px; }
-    .kpi-value { font-size: 20px; }
+    .kpi-value { font-size: 18px; }
     .kpi-label { font-size: 12px; }
 
-    .card { padding: 16px; border-radius: 14px; }
-    div[data-testid="stVerticalBlockBorderWrapper"] { padding: 4px 4px; border-radius: 14px; }
-    div[data-testid="stForm"] { padding: 16px; border-radius: 14px; }
-
-    .receipt-box { padding: 18px; font-size: 14px; }
-
-    /* Touch-friendly input heights & buttons for mobile */
-    .stButton > button,
-    div[data-testid="stFormSubmitButton"] button {
+    .stButton > button {
         width: 100%;
-        min-height: 48px;
-        font-size: 15px;
-    }
-
-    input, textarea, select,
-    div[data-baseweb="select"] > div {
-        font-size: 16px !important;
         min-height: 44px;
-    }
-
-    section[data-testid="stSidebar"] .stButton > button {
-        padding: 12px 16px;
-        font-size: 14px;
-    }
-
-    div[data-testid="stDataFrame"] {
-        overflow-x: auto;
-    }
-
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.login-marker) {
-        padding: 24px 18px 18px 18px;
-        margin: 10px auto;
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .kpi-value { font-size: 18px; }
-    .section-title { font-size: 18px; }
-    div[data-testid="column"] {
-        min-width: 100% !important;
     }
 }
 </style>
