@@ -23,7 +23,7 @@ def get_connection():
     elif "DATABASE_URL" in os.environ:
         db_url = os.environ["DATABASE_URL"]
 
-    # If no valid connection string is provided, fail with a helpful error message instead of trying localhost
+    # Fail explicitly if no database configuration is present
     if not db_url:
         raise ValueError(
             "Database URL not configured! Please check your Streamlit Cloud secrets configuration."
@@ -40,14 +40,11 @@ def get_connection():
 
 
 def _safe_add_column(cursor, table, column_def):
-    """Add a column if it doesn't already exist. Never destroys data."""
-    try:
-        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def};")
-    except psycopg2.errors.DuplicateColumn:
-        pass
-    except Exception as e:
-        if "already exists" not in str(e).lower():
-            raise
+    """
+    Add a column if it doesn't already exist.
+    Uses PostgreSQL native 'IF NOT EXISTS' to avoid transaction-aborting errors.
+    """
+    cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column_def};")
 
 
 def init_db():
