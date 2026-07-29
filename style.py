@@ -163,22 +163,29 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* MODERN GLASSMORPHIC SIDEBAR STYLING                              */
+/* MODERN GLASSMORPHIC SIDEBAR STYLING & COLLAPSE FIX              */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
     direction: RTL;
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-    overflow: hidden !important;
 }
 
+/* Hide sidebar background/shadow when collapsed, but KEEP the expand button functional */
 section[data-testid="stSidebar"][data-collapsed="true"] {
-    visibility: hidden !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-section[data-testid="stSidebar"][data-collapsed="true"] * {
-    display: none !important;
-    opacity: 0 !important;
+/* Force the collapse/expand toggle button to stay visible at all times */
+button[data-testid="stSidebarCollapseButton"],
+div[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 999999 !important;
 }
 
 /* Sidebar Text Color Fixes */
@@ -540,12 +547,13 @@ div[data-testid="stHeadingWithHeadline"] > h6 {
     width: 100% !important;
 }
 
-/* Hide Streamlit default header and footer for client demos */
+/* Hide Streamlit default UI overlays & developer widgets */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 div[data-testid="stDecoration"] {display: none;}
 div[data-testid="stToolbar"] {visibility: hidden;}
-
+div[data-testid="stStatusWidget"] {display: none !important;}
+.stDeployButton {display: none !important;}
 </style>
 """
