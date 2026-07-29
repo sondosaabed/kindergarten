@@ -51,14 +51,14 @@ def render(conn):
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """, (H.ANNUAL_TUITION,)))
 
-    # Render KPI Cards in Arabic
+    # Render KPI Cards in Arabic with coordinated badge palettes
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, "#E9F5EC", "#219044")
-    ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, "#FBF3E3", "#D7A431")
-    ui.kpi(c3, "🏷️", "الصفوف", total_classes, "#E9F5EC", "#163D22")
-    ui.kpi(c4, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), "#FDECEC", "#E62031")
-    ui.kpi(c5, "⏳", "بانتظار رسوم التسجيل", pending, "#FBF3E3", "#B4790C")
-    ui.kpi(c6, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), "#FDECEC", "#E62031")
+    ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
+    ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
+    ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
+    ui.kpi(c4, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
+    ui.kpi(c5, "⏳", "بانتظار التسجيل", pending, bg="#FEF3C7", fg="#D97706")
+    ui.kpi(c6, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
 
     st.write("")
     left, right = st.columns([1.3, 1])
