@@ -1,8 +1,7 @@
 """
 sections/reports.py — التقارير والتصدير
 
-Filtered report views (payments, students, registrations) with an Excel
-export button.
+Filtered report views with an Excel export button.
 """
 
 import io
@@ -36,9 +35,9 @@ def render(conn):
         reason_filter = c3.selectbox("مقابل", ["الكل"] + H.PAYMENT_FOR)
 
         query = """
-            SELECT p.receipt_number AS 'رقم الوصل', s.full_name AS 'اسم الطالب',
-                   p.amount AS 'المبلغ', p.payment_date AS 'تاريخ الدفع',
-                   p.payer_name AS 'اسم الدافع', p.payment_for AS 'مقابل'
+            SELECT p.receipt_number AS "رقم الوصل", s.full_name AS "اسم الطالب",
+                   p.amount AS "المبلغ", p.payment_date AS "تاريخ الدفع",
+                   p.payer_name AS "اسم الدافع", p.payment_for AS "مقابل"
             FROM payments p
             JOIN registrations r ON p.registration_id = r.registration_id
             JOIN students s ON r.student_id = s.student_id
@@ -46,13 +45,13 @@ def render(conn):
         """
         params = []
         if date_from:
-            query += " AND p.payment_date >= ?"
+            query += " AND p.payment_date >= %s"
             params.append(str(date_from))
         if date_to:
-            query += " AND p.payment_date <= ?"
+            query += " AND p.payment_date <= %s"
             params.append(str(date_to))
         if reason_filter != "الكل":
-            query += " AND p.payment_for = ?"
+            query += " AND p.payment_for = %s"
             params.append(reason_filter)
         query += " ORDER BY p.payment_date DESC"
         result = ui.df(conn, query, tuple(params))
@@ -62,19 +61,21 @@ def render(conn):
 
     elif report_type == "قائمة الطلاب وأولياء الأمور":
         result = ui.df(conn, """
-            SELECT s.student_id AS 'رقم هوية الطالب', s.full_name AS 'اسم الطالب',
-                   s.birth_date AS 'تاريخ الميلاد', s.gender AS 'الجنس',
-                   p.father_name AS 'اسم الأب', p.father_mobile AS 'جوال الأب',
-                   p.mother_name AS 'اسم الأم', p.address AS 'العنوان'
+            SELECT s.student_id AS "رقم هوية الطالب", s.full_name AS "اسم الطالب",
+                   s.birth_date AS "تاريخ الميلاد", s.gender AS "الجنس",
+                   p.father_name AS "اسم الأب", p.father_mobile AS "جوال الأب",
+                   p.mother_name AS "اسم الأم", p.address AS "العنوان"
             FROM students s JOIN parents p ON s.father_id = p.father_id
         """)
 
     else:  # registrations
-        year_filter = st.selectbox("تصفية حسب السنة",
-                                    ["الكل"] + ui.df(conn, "SELECT year_id FROM academic_years")['year_id'].tolist())
+        years_df = ui.df(conn, "SELECT year_id FROM academic_years")
+        year_list = years_df['year_id'].tolist() if not years_df.empty else []
+        year_filter = st.selectbox("تصفية حسب السنة", ["الكل"] + year_list)
+
         query = """
-            SELECT s.full_name AS 'اسم الطالب', (c.class_type || ' ' || c.section) AS 'الصف',
-                   r.year_id AS 'السنة الدراسية', r.status AS 'الحالة', r.registration_date AS 'تاريخ التسجيل'
+            SELECT s.full_name AS "اسم الطالب", (c.class_type || ' ' || c.section) AS "الصف",
+                   r.year_id AS "السنة الدراسية", r.status AS "الحالة", r.registration_date AS "تاريخ التسجيل"
             FROM registrations r
             JOIN students s ON s.student_id = r.student_id
             JOIN classes c ON c.class_id = r.class_id
@@ -82,7 +83,7 @@ def render(conn):
         """
         params = []
         if year_filter != "الكل":
-            query += " AND r.year_id = ?"
+            query += " AND r.year_id = %s"
             params.append(year_filter)
         result = ui.df(conn, query, tuple(params))
 
