@@ -1,11 +1,8 @@
 """
-sections/parents.py — أولياء الأمور
-
-Add, search, edit and delete parent records.
+sections/parents.py — إدارة بيانات أولياء الأمور (إضافة / عرض / تعديل / حذف)
 """
 
 import streamlit as st
-
 import ui
 import helpers as H
 
@@ -13,135 +10,178 @@ import helpers as H
 def render(conn):
     ui.section_header("👨‍👩‍👧", "أولياء الأمور", "بيانات الأب والأم والتواصل")
 
-    tab_add, tab_view = st.tabs(["➕ إضافة ولي أمر جديد", "📋 عرض / تعديل / حذف"])
+    tab_add, tab_view = st.tabs(["➕ إضافة ولي أمر جديد", "📝 عرض / تعديل / حذف"])
 
+    # -------------------------------------------------- TAB 1: ADD PARENT --
     with tab_add:
+        st.markdown("##### 📝 أدخل بيانات ولي الأمر الجديد")
+
         with st.form("add_parent_form", clear_on_submit=True):
-            st.markdown("###### بيانات الأب")
-            c1, c2, c3 = st.columns(3)
-            father_id = c1.text_input("رقم هوية الأب")
-            father_name = c2.text_input("اسم الأب الرباعي")
-            father_mobile = c3.text_input("جوال الأب")
-            c4, c5, c6 = st.columns(3)
-            father_job = c4.text_input("عمل الأب")
-            father_id_type = c5.selectbox("نوع هوية الأب", H.PARENT_ID_TYPES)
-            father_work_phone = c6.text_input("رقم عمل الأب")
+            col1, col2 = st.columns(2)
 
-            st.markdown("###### بيانات الأم")
-            c7, c8, c9 = st.columns(3)
-            mother_id = c7.text_input("رقم هوية الأم")
-            mother_name = c8.text_input("اسم الأم الرباعي")
-            mother_mobile = c9.text_input("جوال الأم")
-            c10, c11, c12 = st.columns(3)
-            mother_job_status = c10.selectbox("عمل الأم", H.MOTHER_JOB_STATUS)
-            mother_work_type = c11.text_input("طبيعة عمل الأم") if mother_job_status == "تعمل" else ""
-            mother_id_type = c12.selectbox("نوع هوية الأم", H.PARENT_ID_TYPES)
-            mother_work_phone = st.text_input("رقم عمل الأم (إن وجد)")
+            with col1:
+                father_id = st.text_input("رقم هوية الأب *", key="f_id").strip()
+                father_id_type = st.selectbox("نوع هوية الأب", H.PARENT_ID_TYPES, key="f_id_type")
+                father_name = st.text_input("اسم الأب رباعي *", key="f_name").strip()
+                father_mobile = st.text_input("جوال الأب *", key="f_mob").strip()
+                father_job = st.text_input("مهنة الأب", key="f_job").strip()
 
-            st.markdown("###### بيانات إضافية")
-            c13, c14 = st.columns(2)
-            address = c13.text_input("عنوان السكن")
-            landline = c14.text_input("رقم الهاتف الأرضي")
-            c15, c16 = st.columns(2)
-            residency = c15.selectbox("الحالة", H.RESIDENCY_STATUS)
-            marital = c16.selectbox("الحالة الاجتماعية", H.MARITAL_STATUS)
-            c17, c18 = st.columns(2)
-            emerg_name = c17.text_input("اسم جهة الاتصال للطوارئ")
-            emerg_phone = c18.text_input("رقم جهة الاتصال للطوارئ")
+            with col2:
+                mother_id = st.text_input("رقم هوية الأم *", key="m_id").strip()
+                mother_id_type = st.selectbox("نوع هوية الأم", H.PARENT_ID_TYPES, key="m_id_type")
+                mother_name = st.text_input("اسم الأم رباعي *", key="m_name").strip()
+                mother_mobile = st.text_input("جوال الأم", key="m_mob").strip()
+                mother_job_status = st.selectbox("عمل الأم", H.MOTHER_JOB_STATUS, key="m_job_stat")
 
-            submitted = st.form_submit_button("💾 حفظ بيانات ولي الأمر", type="primary")
+            st.markdown("---")
+            c3, c4 = st.columns(2)
+            with c3:
+                marital_status = st.selectbox("الحالة الاجتماعية", H.MARITAL_STATUS, key="m_status")
+            with c4:
+                address = st.text_input("العنوان السكني التفصيلي", key="p_address").strip()
+
+            submitted = st.form_submit_button("💾 حفظ ولي الأمر", type="primary", use_container_width=True)
+
             if submitted:
-                required = [father_id, father_name, father_mobile, father_job, mother_id,
-                            mother_name, mother_mobile, address, landline, residency, marital,
-                            father_work_phone, emerg_name, emerg_phone]
-                if not all(required):
-                    st.warning("يرجى تعبئة جميع الحقول الأساسية (*).")
+                if not father_id or not father_name or not father_mobile or not mother_id or not mother_name:
+                    st.error("⚠️ يرجى تعبئة الحقول المطلوبة (*)")
                 else:
-                    existing = ui.df(conn, "SELECT 1 FROM parents WHERE father_id = %s", (father_id,))
-                    if not existing.empty:
-                        st.error("رقم هوية الأب مسجل مسبقاً.")
-                    else:
+                    try:
                         cur = conn.cursor()
-                        cur.execute('''
-                            INSERT INTO parents
-                            (father_id, mother_id, father_name, mother_name, father_job, mother_job,
-                             mother_work_type, father_id_type, mother_id_type, address, landline,
-                             status_refugee, father_work_phone, mother_work_phone, father_mobile,
-                             mother_mobile, emergency_contact_name, emergency_contact_phone,
-                             marital_status, created_at)
-                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                        ''', (father_id, mother_id, father_name, mother_name, father_job, mother_job_status,
-                              mother_work_type, father_id_type, mother_id_type, address, landline,
-                              residency, father_work_phone, mother_work_phone, father_mobile,
-                              mother_mobile, emerg_name, emerg_phone, marital, H.now_str()))
+                        cur.execute("""
+                            INSERT INTO parents (
+                                father_id, father_id_type, father_name, father_mobile, father_job,
+                                mother_id, mother_id_type, mother_name, mother_mobile, mother_job_status,
+                                marital_status, address
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """, (
+                            father_id, father_id_type, father_name, father_mobile, father_job,
+                            mother_id, mother_id_type, mother_name, mother_mobile, mother_job_status,
+                            marital_status, address
+                        ))
                         conn.commit()
                         cur.close()
-                        st.success(f"تم حفظ بيانات ولي الأمر «{father_name}» بنجاح! 🎉")
+                        st.success(f"✅ تم حفظ ولي الأمر ({father_name}) بنجاح!")
                         st.rerun()
+                    except Exception as e:
+                        conn.rollback()
+                        st.error(f"❌ حدث خطأ أثناء الحفظ (قد يكون رقم الهوية مسجلاً مسبقاً): {e}")
 
+    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
     with tab_view:
-        parents = ui.df(conn, "SELECT * FROM parents ORDER BY created_at DESC")
-        if parents.empty:
-            ui.empty_state("لا يوجد أولياء أمور مسجلون بعد.")
+        search_term = st.text_input("🔍 ابحث بالاسم أو رقم الهوية", placeholder="اكتب اسم الأب، الأم، أو رقم الهوية...").strip()
+
+        # Query parents with proper Arabic aliases
+        query = """
+            SELECT 
+                father_id AS "هوية الأب",
+                father_name AS "اسم الأب",
+                mother_name AS "اسم الأم",
+                father_mobile AS "جوال الأب",
+                mother_mobile AS "جوال الأم",
+                address AS "العنوان",
+                marital_status AS "الحالة الاجتماعية",
+                father_job AS "مهنة الأب",
+                mother_id AS "هوية الأم"
+            FROM parents
+        """
+        params = []
+        if search_term:
+            query += """ WHERE 
+                father_name LIKE %s OR 
+                mother_name LIKE %s OR 
+                father_id LIKE %s OR 
+                mother_id LIKE %s
+            """
+            term = f"%{search_term}%"
+            params = [term, term, term, term]
+
+        query += " ORDER BY father_name ASC"
+
+        df_parents = ui.df(conn, query, tuple(params))
+
+        if df_parents.empty:
+            ui.empty_state("لا توجد بيانات أولياء أمور مسجلة بعد.")
         else:
-            search = st.text_input("🔍 ابحث بالاسم أو رقم الهوية", key="p_search")
-            shown = parents.copy()
-            if search:
-                shown = shown[shown['father_name'].str.contains(search, na=False) |
-                              shown['mother_name'].str.contains(search, na=False) |
-                              shown['father_id'].str.contains(search, na=False)]
-            st.dataframe(shown.rename(columns={
-                'father_id': 'هوية الأب', 'father_name': 'اسم الأب', 'mother_name': 'اسم الأم',
-                'father_mobile': 'جوال الأب', 'mother_mobile': 'جوال الأم', 'address': 'العنوان',
-                'marital_status': 'الحالة الاجتماعية'
-            })[['هوية الأب', 'اسم الأب', 'اسم الأم', 'جوال الأب', 'جوال الأم', 'العنوان', 'الحالة الاجتماعية']],
-                use_container_width=True, hide_index=True)
+            st.dataframe(df_parents, use_container_width=True, hide_index=True)
 
-            st.divider()
-            st.markdown("##### ✏️ تعديل أو حذف ولي أمر")
-            pick = st.selectbox("اختر ولي الأمر", parents['father_name'] + " — " + parents['father_id'],
-                                index=None, placeholder="ابحث...")
-            if pick:
-                fid = pick.split(" — ")[-1]
-                row = parents[parents['father_id'] == fid].iloc[0]
-                linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM students WHERE father_id=%s", (fid,))
-                linked_students = linked_df.iloc[0]['c'] if not linked_df.empty else 0
+        st.markdown("---")
+        st.markdown("##### ✏️ تعديل أو حذف ولي أمر")
 
-                with st.form("edit_parent_form"):
-                    c1, c2 = st.columns(2)
-                    e_fname = c1.text_input("اسم الأب", value=row['father_name'])
-                    e_mname = c2.text_input("اسم الأم", value=row['mother_name'])
-                    c3, c4 = st.columns(2)
-                    e_fmobile = c3.text_input("جوال الأب", value=row['father_mobile'])
-                    e_mmobile = c4.text_input("جوال الأم", value=row['mother_mobile'])
-                    e_address = st.text_input("العنوان", value=row['address'])
+        # Fetch parents directly for selectbox
+        cur = conn.cursor()
+        cur.execute("SELECT father_id, father_name, mother_name FROM parents ORDER BY father_name ASC")
+        all_parents = cur.fetchall()
+        cur.close()
 
-                    b1, b2 = st.columns(2)
-                    save = b1.form_submit_button("💾 حفظ التعديلات", type="primary")
-                    delete = b2.form_submit_button("🗑️ حذف ولي الأمر")
+        if all_parents:
+            # Parse row entries depending on DB cursor format
+            parent_options = []
+            for p in all_parents:
+                if isinstance(p, dict):
+                    fid, fname, mname = p['father_id'], p['father_name'], p['mother_name']
+                else:
+                    fid, fname, mname = p[0], p[1], p[2]
+                parent_options.append((fid, f"{fname} (أم: {mname}) - [هوية: {fid}]"))
 
-                    if save:
-                        cur = conn.cursor()
-                        cur.execute('''
-                            UPDATE parents SET father_name=%s, mother_name=%s, father_mobile=%s,
-                                mother_mobile=%s, address=%s WHERE father_id=%s
-                        ''', (e_fname, e_mname, e_fmobile, e_mmobile, e_address, fid))
-                        conn.commit()
-                        cur.close()
-                        st.success("تم حفظ التعديلات.")
-                        st.rerun()
+            selected_parent = st.selectbox(
+                "اختر ولي الأمر",
+                options=parent_options,
+                format_func=lambda x: x[1] if x else "اختر...",
+                key="parent_select_edit"
+            )
 
-                    if delete:
-                        if linked_students > 0:
-                            st.error(f"⚠️ لا يمكن الحذف مباشرة: يوجد {linked_students} طالب مرتبط بولي الأمر هذا. "
-                                     "احذف أو انقل الطلاب أولاً.")
-                        else:
-                            cur = conn.cursor()
-                            cur.execute("DELETE FROM parents WHERE father_id=%s", (fid,))
-                            conn.commit()
-                            cur.close()
-                            st.success("تم حذف ولي الأمر.")
-                            st.rerun()
+            if selected_parent:
+                selected_fid = selected_parent[0]
 
-                if linked_students > 0:
-                    st.caption(f"👶 عدد الأبناء المسجلين لولي الأمر هذا: {linked_students}")
+                # Fetch selected parent's existing details
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM parents WHERE father_id = %s", (selected_fid,))
+                p_data = cur.fetchone()
+                cur.close()
+
+                if p_data:
+                    # Normalize p_data dictionary vs tuple access
+                    def g(key, idx):
+                        if isinstance(p_data, dict):
+                            return p_data.get(key, "")
+                        return p_data[idx] if idx < len(p_data) else ""
+
+                    with st.expander(f"⚙️ تعديل بيانات: {g('father_name', 2)}", expanded=True):
+                        with st.form("edit_parent_form"):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                ef_name = st.text_input("اسم الأب", value=g('father_name', 2))
+                                ef_mob = st.text_input("جوال الأب", value=g('father_mobile', 3))
+                                ef_job = st.text_input("مهنة الأب", value=g('father_job', 4))
+                            with col2:
+                                em_name = st.text_input("اسم الأم", value=g('mother_name', 7))
+                                em_mob = st.text_input("جوال الأم", value=g('mother_mobile', 8))
+                                e_addr = st.text_input("العنوان", value=g('address', 11))
+
+                            col_btn1, col_btn2 = st.columns(2)
+                            with col_btn1:
+                                save_edit = st.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
+                            with col_btn2:
+                                delete_parent = st.form_submit_button("🗑️ حذف ولي الأمر", use_container_width=True)
+
+                            if save_edit:
+                                cur = conn.cursor()
+                                cur.execute("""
+                                    UPDATE parents SET 
+                                        father_name = %s, father_mobile = %s, father_job = %s,
+                                        mother_name = %s, mother_mobile = %s, address = %s
+                                    WHERE father_id = %s
+                                """, (ef_name, ef_mob, ef_job, em_name, em_mob, e_addr, selected_fid))
+                                conn.commit()
+                                cur.close()
+                                st.success("✅ تم تحديث بيانات ولي الأمر بنجاح!")
+                                st.rerun()
+
+                            if delete_parent:
+                                cur = conn.cursor()
+                                cur.execute("DELETE FROM parents WHERE father_id = %s", (selected_fid,))
+                                conn.commit()
+                                cur.close()
+                                st.warning("🗑️ تم حذف ولي الأمر بنجاح!")
+                                st.rerun()
