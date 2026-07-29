@@ -61,7 +61,10 @@ def render(conn):
         regs = ui.df(conn, """
             SELECT r.registration_id, s.full_name AS "اسم الطالب",
                    (c.class_type || ' ' || c.section) AS "الصف", r.year_id AS "السنة الدراسية",
-                   r.status AS "الحالة", r.registration_date AS "تاريخ التسجيل"
+                   r.status AS "الحالة", r.registration_date AS "تاريخ التسجيل",
+                   COALESCE((SELECT SUM(p.amount) FROM payments p
+                             WHERE p.registration_id = r.registration_id
+                               AND p.payment_for IN ('رسوم تسجيل', 'أقساط تعليمية')), 0) AS paid_toward_tuition
             FROM registrations r
             JOIN students s ON s.student_id = r.student_id
             JOIN classes c ON c.class_id = r.class_id
@@ -70,6 +73,9 @@ def render(conn):
         if regs.empty:
             ui.empty_state("لا توجد تسجيلات بعد.")
         else:
+            regs["المبلغ المتبقي"] = (H.ANNUAL_TUITION - regs["paid_toward_tuition"]).clip(lower=0)
+            regs = regs.drop(columns=["paid_toward_tuition"])
+
             f1, f2 = st.columns(2)
             year_filter = f1.selectbox("تصفية حسب السنة", ["الكل"] + sorted(regs["السنة الدراسية"].unique().tolist()))
             status_filter = f2.selectbox("تصفية حسب الحالة", ["الكل", H.STATUS_NEW, H.STATUS_ACTIVE])
@@ -79,3 +85,4 @@ def render(conn):
             if status_filter != "الكل":
                 shown = shown[shown["الحالة"] == status_filter]
             st.dataframe(shown, use_container_width=True, hide_index=True)
+            st.caption(f"💡 الرسوم السنوية لكل طالب: {H.format_money(H.ANNUAL_TUITION)} شيكل/دينار (شاملة رسوم التسجيل).")

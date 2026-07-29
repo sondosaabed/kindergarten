@@ -2,8 +2,9 @@
 sections/payments.py — الدفعات المالية
 
 Records a cash payment against a registration, updates the registration's
-status automatically, and offers a one-click printable receipt (see
-receipt.py) instead of relying on the browser's Ctrl/Cmd+P.
+status automatically, shows the remaining yearly balance, and offers a
+one-click printable receipt (see receipt.py) instead of relying on the
+browser's Ctrl/Cmd+P.
 """
 
 import streamlit as st
@@ -14,7 +15,7 @@ import receipt
 
 
 def render(conn):
-    ui.section_header(" 💵 ", "الدفعات المالية", "تسجيل دفعة نقدية وطباعة وصل استلام")
+    ui.section_header("💵", "الدفعات المالية", "تسجيل دفعة نقدية وطباعة وصل استلام")
 
     active_regs = ui.df(conn, """
         SELECT r.registration_id, s.full_name AS student_name, p.father_name,
@@ -38,6 +39,17 @@ def render(conn):
         reg_dict = dict(zip(active_regs['label'], active_regs['registration_id']))
         selected_label = st.selectbox("اختر الطالب والتسجيل", list(reg_dict.keys()))
         selected_row = active_regs[active_regs['label'] == selected_label].iloc[0]
+        reg_id_preview = int(selected_row['registration_id'])
+
+        # Show where this student stands before taking a new payment —
+        # the annual tuition (registration fee included) is fixed at
+        # ANNUAL_TUITION per student per year.
+        paid_so_far = H.compute_paid_toward_tuition(conn, reg_id_preview)
+        remaining_before = H.compute_remaining_balance(conn, reg_id_preview)
+        i1, i2, i3 = st.columns(3)
+        i1.metric("الرسوم السنوية", f"{H.format_money(H.ANNUAL_TUITION)}")
+        i2.metric("المدفوع حتى الآن", f"{H.format_money(paid_so_far)}")
+        i3.metric("المتبقي", f"{H.format_money(remaining_before)}")
 
         with st.form("add_payment_form"):
             c1, c2 = st.columns(2)
@@ -62,6 +74,7 @@ def render(conn):
             conn.commit()
             receipt_id = cur.lastrowid
             new_status = H.refresh_registration_status(conn, reg_id)
+            remaining_after = H.compute_remaining_balance(conn, reg_id)
 
             st.success(f"تم حفظ الدفعة بنجاح! رقم الوصل: #{receipt_id} — حالة التسجيل الآن: {new_status}")
 
@@ -72,6 +85,7 @@ def render(conn):
                 payer=payer,
                 amount=H.format_money(amount),
                 reason=reason,
+                remaining=H.format_money(remaining_after),
                 reason_other=reason_other,
             )
 

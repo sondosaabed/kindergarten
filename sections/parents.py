@@ -11,7 +11,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header(" 👨‍👩‍👧 "," أولياء الأمور ", "بيانات الأب والأم والتواصل")
+    ui.section_header("👨‍👩‍👧", "أولياء الأمور", "بيانات الأب والأم والتواصل")
 
     tab_add, tab_view = st.tabs(["➕ إضافة ولي أمر جديد", "📋 عرض / تعديل / حذف"])
 
@@ -25,7 +25,7 @@ def render(conn):
             c4, c5, c6 = st.columns(3)
             father_job = c4.text_input("عمل الأب")
             father_id_type = c5.selectbox("نوع هوية الأب", H.PARENT_ID_TYPES)
-            father_work_phone = c6.text_input("رقم عمل الأب (إن وجد)")
+            father_work_phone = c6.text_input("رقم عمل الأب")
 
             st.markdown("###### بيانات الأم")
             c7, c8, c9 = st.columns(3)
@@ -52,8 +52,8 @@ def render(conn):
             submitted = st.form_submit_button("💾 حفظ بيانات ولي الأمر", type="primary")
             if submitted:
                 required = [father_id, father_name, father_mobile, father_job, mother_id,
-                            mother_name, mother_mobile, address, residency, marital,
-                            emerg_name, emerg_phone]
+                            mother_name, mother_mobile, address, landline, residency, marital,
+                            father_work_phone, emerg_name, emerg_phone]
                 if not all(required):
                     st.warning("يرجى تعبئة جميع الحقول الأساسية (*).")
                 else:
