@@ -64,6 +64,43 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
+/* STREAMLIT NATIVE HEADINGS FIX (Anchors & Titles Alignment)      */
+/* ---------------------------------------------------------------- */
+div[data-testid="stHeadingWithHeadline"] {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+div[data-testid="stHeadingWithHeadline"] > h1,
+div[data-testid="stHeadingWithHeadline"] > h2,
+div[data-testid="stHeadingWithHeadline"] > h3,
+div[data-testid="stHeadingWithHeadline"] > h4,
+div[data-testid="stHeadingWithHeadline"] > h5,
+div[data-testid="stHeadingWithHeadline"] > h6 {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: 700 !important;
+    color: var(--text-main);
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+/* Hide or push Streamlit anchor link icon out of the way */
+div[data-testid="stHeadingWithHeadline"] a {
+    order: 2 !important;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+}
+
+div[data-testid="stHeadingWithHeadline"]:hover a {
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------------- */
 /* SECTION TITLES & SUBTITLES IN CAIRO                              */
 /* ---------------------------------------------------------------- */
 .section-title {
