@@ -546,5 +546,10 @@ footer {visibility: hidden;}
 header {visibility: hidden;}
 div[data-testid="stDecoration"] {display: none;}
 div[data-testid="stToolbar"] {visibility: hidden;}
+
+/* Hide Streamlit Action Elements & Viewer Badges */
+div[data-testid="stStatusWidget"] { display: none !important; }
+.stDeployButton { display: none !important; }
+div[data-testid="stAppViewBlockContainer"] > footer { display: none !important; }
 </style>
 """
