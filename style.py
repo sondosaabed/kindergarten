@@ -482,5 +482,19 @@ div[data-testid="stForm"] .stButton > button:hover {
     box-shadow: 0 6px 16px rgba(6, 78, 59, 0.25) !important;
 }
 
+/* ---------------------------------------------------------------- */
+/* HIDE STREAMLIT FORM HELPER TEXT ("Press Enter to submit form")  */
+/* ---------------------------------------------------------------- */
+div[data-testid="stForm"] [data-aria-hidden="true"],
+div[data-testid="stForm"] small,
+div[data-testid="InputInstructions"] {
+    display: none !important;
+}
+
+/* Ensure placeholder text doesn't overlap instruction elements */
+div[data-testid="stForm"] input::placeholder {
+    opacity: 0.6 !important;
+}
+
 </style>
 """
