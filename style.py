@@ -276,6 +276,11 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
     font-family: 'Cairo', sans-serif !important;
 }
 
+section[data-testid="stSidebar"] img {
+    max-width: 140px !important;
+    height: auto !important;
+}
+
 /* ---------------------------------------------------------------- */
 /* CONTAINERS, DATAFRAMES & FORM ELEMENTS                           */
 /* ---------------------------------------------------------------- */
@@ -294,16 +299,23 @@ div[data-testid="stDataFrame"] {
     border: 1px solid var(--card-border);
 }
 
-/* KPI Cards */
+/* ---------------------------------------------------------------- */
+/* UPDATED KPI CARDS SYSTEM (Prevents Overlap and Clipping)         */
+/* ---------------------------------------------------------------- */
 .kpi-card {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 18px 20px;
+    padding: 14px 16px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--card-border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    display: flex !important;
+    flex-direction: row-reverse !important; /* RTL placement: Icon right, Text left */
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: 86px;
+    height: 100%;
+    box-sizing: border-box;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -312,95 +324,56 @@ div[data-testid="stDataFrame"] {
     box-shadow: var(--shadow-md);
 }
 
+.kpi-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: right;
+    flex: 1;
+    min-width: 0; /* Ensures container shrinks properly without pushing text under the icon */
+}
+
+.kpi-value {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: var(--text-main);
+    line-height: 1.2;
+    font-family: 'Cairo', sans-serif !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.kpi-label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.3;
+    font-family: 'Cairo', sans-serif !important;
+    word-break: break-word;
+}
+
 .kpi-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
+    font-size: 22px;
+    flex-shrink: 0 !important;
     background: var(--primary-light);
     color: var(--primary-dark);
 }
 
-.kpi-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text-main);
-    line-height: 1.1;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.kpi-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-/* Form inputs styling */
-div[data-testid="stForm"] {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 22px 24px;
-    border: 1px solid var(--card-border);
-    box-shadow: var(--shadow-sm);
-}
-
-.stButton > button {
-    border-radius: 10px;
-    font-weight: 700;
-    font-family: 'Cairo', sans-serif !important;
-    transition: all 0.2s ease;
-}
-
-.stButton > button[kind="primary"] {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #FFFFFF;
-}
-
-.stButton > button[kind="primary"]:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-}
-
 /* ---------------------------------------------------------------- */
-/* MOBILE RESPONSIVENESS                                            */
+/* LOGIN FORM & INPUT FIELD STYLING                                 */
 /* ---------------------------------------------------------------- */
-@media (max-width: 768px) {
-    .block-container {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        padding-top: 1rem !important;
-    }
-
-    .section-title { font-size: 20px; gap: 8px; }
-    .section-sub { font-size: 13px; margin-bottom: 14px; }
-
-    .kpi-card {
-        padding: 14px 16px;
-        border-radius: 14px;
-        gap: 12px;
-    }
-    .kpi-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 10px; }
-    .kpi-value { font-size: 18px; }
-    .kpi-label { font-size: 12px; }
-
-    .stButton > button {
-        width: 100%;
-        min-height: 44px;
-    }
-}
-
-/* ---------------------------------------------------------------- */
-/* LOGIN FORM CARD ENHANCEMENTS                                     */
-/* ---------------------------------------------------------------- */
-
-/* Login Header Text Styling */
 .login-header {
     text-align: center;
     margin-top: 8px;
@@ -440,7 +413,6 @@ div[data-testid="stForm"] {
     border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
-/* Modern Card Styling for st.form */
 div[data-testid="stForm"] {
     background: #FFFFFF !important;
     border-radius: 20px !important;
@@ -449,7 +421,6 @@ div[data-testid="stForm"] {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
 }
 
-/* Styled Input Fields */
 div[data-testid="stForm"] div[data-baseweb="input"] {
     border-radius: 12px !important;
     background-color: #F8FAFC !important;
@@ -463,44 +434,62 @@ div[data-testid="stForm"] div[data-baseweb="input"]:focus-within {
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
-/* Button Refinement */
-div[data-testid="stForm"] .stButton > button {
-    background: #10B981 !important;
-    color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 12px !important;
-    height: 46px !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
-    margin-top: 10px !important;
-}
-
-div[data-testid="stForm"] .stButton > button:hover {
-    background: #064E3B !important;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.25) !important;
-}
-
-/* ---------------------------------------------------------------- */
-/* HIDE STREAMLIT FORM HELPER TEXT ("Press Enter to submit form")  */
-/* ---------------------------------------------------------------- */
+/* Hide Streamlit form instructions ("Press Enter to submit form") */
 div[data-testid="stForm"] [data-aria-hidden="true"],
 div[data-testid="stForm"] small,
 div[data-testid="InputInstructions"] {
     display: none !important;
 }
 
-/* Ensure placeholder text doesn't overlap instruction elements */
 div[data-testid="stForm"] input::placeholder {
     opacity: 0.6 !important;
 }
 
-/* Sidebar Logo Size */
-section[data-testid="stSidebar"] img {
-    max-width: 300px !important; /* Adjust size here (e.g., 140px or 160px) */
-    height: auto !important;
+.stButton > button {
+    border-radius: 10px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif !important;
+    transition: all 0.2s ease;
 }
 
+.stButton > button[kind="primary"] {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+}
+
+/* ---------------------------------------------------------------- */
+/* MOBILE RESPONSIVENESS                                            */
+/* ---------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-top: 1rem !important;
+    }
+
+    .section-title { font-size: 20px; gap: 8px; }
+    .section-sub { font-size: 13px; margin-bottom: 14px; }
+
+    .kpi-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+        gap: 10px !important;
+    }
+    .kpi-icon { width: 40px !important; height: 40px !important; min-width: 40px !important; font-size: 18px; border-radius: 10px; }
+    .kpi-value { font-size: 17px !important; }
+    .kpi-label { font-size: 12px !important; }
+
+    .stButton > button {
+        width: 100%;
+        min-height: 44px;
+    }
+}
 </style>
 """
