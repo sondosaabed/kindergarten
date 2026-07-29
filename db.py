@@ -11,16 +11,16 @@ import streamlit as st
 
 def get_connection():
     """
-    Connects to Supabase PostgreSQL using secrets configured in Streamlit Cloud
-    or fallback environment variable.
+    Connects to PostgreSQL using secrets configured in Streamlit Cloud (.streamlit/secrets.toml)
+    or falls back to an environment variable DB_URL.
     """
     if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
         db_url = st.secrets["postgres"]["url"]
     else:
-        db_url = os.environ.get("DATABASE_URL", "")
-
-    if not db_url:
-        raise ValueError("Database connection URL not found in st.secrets or DATABASE_URL!")
+        db_url = os.environ.get(
+            "DATABASE_URL",
+            "postgresql://postgres:password@localhost:5432/postgres"
+        )
 
     conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
     conn.autocommit = False
@@ -32,6 +32,7 @@ def _safe_add_column(cursor, table, column_def):
     try:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def};")
     except psycopg2.errors.DuplicateColumn:
+        # Postgres throws DuplicateColumn if the column already exists
         pass
     except Exception as e:
         if "already exists" not in str(e).lower():
@@ -143,7 +144,7 @@ def init_db():
             );
         ''')
         _safe_add_column(cursor, "registrations", "registration_date TEXT")
-        
+
         cursor.execute('''
             CREATE UNIQUE INDEX IF NOT EXISTS uniq_student_year
             ON registrations(student_id, year_id);
@@ -164,7 +165,7 @@ def init_db():
             );
         ''')
 
-        # Helpful indexes
+        # Indexes for fast lookups
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_students_father ON students(father_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_reg_student ON registrations(student_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_reg_class ON registrations(class_id);")
