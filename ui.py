@@ -1,8 +1,5 @@
 """
 ui.py — small shared UI building blocks used by every section module.
-
-Keeping these in one place means every page (dashboard, students, ...)
-looks and behaves consistently without repeating markup.
 """
 
 import base64
@@ -52,11 +49,12 @@ def section_header(icon, title, subtitle=""):
 
 
 def kpi(col, icon, label, value, bg="#E9F5EC", fg="#219044"):
+    """Renders an updated, layout-safe KPI card into a Streamlit column."""
     with col:
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-icon" style="background:{bg}; color:{fg};">{icon}</div>
-            <div>
+            <div class="kpi-content">
                 <div class="kpi-value">{value}</div>
                 <div class="kpi-label">{label}</div>
             </div>
@@ -73,9 +71,7 @@ def confirm_delete(key, label="أوافق على الحذف نهائياً"):
 
 
 # --------------------------------------------------------------------------
-# Logo — rendered as a fixed-size base64 <img> so it looks identical and
-# correctly centered everywhere it's used (sidebar, login screen), instead
-# of scaling to whatever column/container happens to hold it.
+# Logo rendering
 # --------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def _logo_base64():
