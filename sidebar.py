@@ -1,8 +1,16 @@
 """
 sidebar.py — the app's navigation rail.
+
+Replaces the old st.radio menu with a stack of full-width buttons.
+The active page is rendered with type="primary" (brand-colored) and every
+other page with the default/secondary look, which reads as a proper
+"selected tab" without any fragile custom CSS targeting individual
+buttons by position.
+Updated for PostgreSQL date formatting syntax.
 """
 
 import streamlit as st
+
 import ui
 import helpers as H
 import auth
@@ -36,17 +44,16 @@ def render(conn):
         </div>
         """, unsafe_allow_html=True)
 
-        # 1. Fetch total students safely
-        df_students = ui.df(conn, "SELECT COUNT(*) AS c FROM students")
-        students_count = df_students.iloc[0]['c'] if not df_students.empty else 0
+        students_count_df = ui.df(conn, "SELECT COUNT(*) AS c FROM students")
+        students_count = students_count_df.iloc[0]['c'] if not students_count_df.empty else 0
 
-        # 2. Fetch monthly revenue using PostgreSQL TO_CHAR() instead of SQLite strftime()
-        df_revenue = ui.df(
-            conn,
-            "SELECT COALESCE(SUM(amount), 0) AS s FROM payments "
-            "WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')"
-        )
-        month_revenue = df_revenue.iloc[0]['s'] if not df_revenue.empty else 0
+        # PostgreSQL syntax: TO_CHAR instead of strftime
+        month_revenue_df = ui.df(conn, """
+            SELECT COALESCE(SUM(amount), 0) AS s 
+            FROM payments 
+            WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+        """)
+        month_revenue = month_revenue_df.iloc[0]['s'] if not month_revenue_df.empty else 0.0
 
         st.markdown(f"""
         <div class="sidebar-stat">👦 عدد الطلاب <b>{students_count}</b></div>
@@ -56,20 +63,15 @@ def render(conn):
         st.markdown("<div class='nav-stack'>", unsafe_allow_html=True)
         for key, icon, label in NAV_ITEMS:
             is_active = st.session_state.current_page == key
-            if st.button(
-                f"{icon}  {label}",
-                key=f"nav_{key}",
-                use_container_width=True,
-                type="primary" if is_active else "secondary"
-            ):
+            if st.button(f"{icon}  {label}", key=f"nav_{key}",
+                         use_container_width=True,
+                         type="primary" if is_active else "secondary"):
                 st.session_state.current_page = key
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown(
-            "<div style='opacity:.6; font-size:12px; margin-top:20px;'>صُنع بـ ❤️ لأجل روضتنا</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div style='opacity:.6; font-size:12px; margin-top:20px;'>صُنع بـ ❤️ لأجل روضتنا</div>",
+                     unsafe_allow_html=True)
         st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
         if st.button("🚪 تسجيل الخروج", use_container_width=True, key="nav_logout"):
             auth.logout()
