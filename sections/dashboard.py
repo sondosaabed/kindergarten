@@ -1,33 +1,46 @@
 """
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
-Optimized performance with explicit Arabic KPI binding and direct metric fetches.
+Optimized performance with explicit Arabic KPI binding and safe positional metric fetches.
 """
 
+import pandas as pd
 import streamlit as st
 import ui
 import helpers as H
 
 
+def _safe_int(df):
+    if not df.empty and pd.notna(df.iloc[0, 0]):
+        try:
+            return int(df.iloc[0, 0])
+        except (ValueError, TypeError):
+            return 0
+    return 0
+
+
+def _safe_float(df):
+    if not df.empty and pd.notna(df.iloc[0, 0]):
+        try:
+            return float(df.iloc[0, 0])
+        except (ValueError, TypeError):
+            return 0.0
+    return 0.0
+
+
 def render(conn):
     ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
 
-    # Fetch metrics directly with explicit column aliases
-    students_df = ui.df(conn, "SELECT COUNT(*) AS total FROM students")
-    teachers_df = ui.df(conn, "SELECT COUNT(*) AS total FROM teachers")
-    classes_df = ui.df(conn, "SELECT COUNT(*) AS total FROM classes")
-    revenue_df = ui.df(conn, "SELECT COALESCE(SUM(amount), 0) AS total FROM payments")
-    pending_df = ui.df(conn, "SELECT COUNT(*) AS total FROM registrations WHERE status = %s", (H.STATUS_NEW,))
+    # Fetch aggregate counts safely
+    total_students = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM students"))
+    total_teachers = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM teachers"))
+    total_classes = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM classes"))
+    total_revenue = _safe_float(ui.df(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
+    pending = _safe_int(ui.df(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
-    total_students = int(students_df.iloc[0]['total']) if not students_df.empty else 0
-    total_teachers = int(teachers_df.iloc[0]['total']) if not teachers_df.empty else 0
-    total_classes = int(classes_df.iloc[0]['total']) if not classes_df.empty else 0
-    total_revenue = float(revenue_df.iloc[0]['total']) if not revenue_df.empty else 0.0
-    pending = int(pending_df.iloc[0]['total']) if not pending_df.empty else 0
-
-    # Calculate remaining balance using PostgreSQL
+    # Calculate remaining balance using PostgreSQL safely
     outstanding_df = ui.df(conn, """
-        SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0) AS total_outstanding
+        SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0)
         FROM registrations r
         LEFT JOIN (
             SELECT registration_id, SUM(amount) AS paid
@@ -38,7 +51,7 @@ def render(conn):
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """, (H.ANNUAL_TUITION,))
 
-    total_outstanding = float(outstanding_df.iloc[0]['total_outstanding']) if not outstanding_df.empty else 0.0
+    total_outstanding = _safe_float(outstanding_df)
 
     # Render KPI Cards in Arabic
     c1, c2, c3, c4, c5, c6 = st.columns(6)
