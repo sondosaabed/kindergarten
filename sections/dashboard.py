@@ -171,9 +171,11 @@ def render(conn):
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "الحالة": st.column_config.TextColumn(
+                    "الحالة": st.column_config.SelectboxColumn(
                         "الحالة",
-                        help="حالة الطالب الحالية"
+                        width="small",
+                        required=True,
+                        options=["منتظم", "جديد", "معلق"],
                     )
                 }
             )
