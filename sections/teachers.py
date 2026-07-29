@@ -35,17 +35,19 @@ def render(conn):
                 if not national_id or not full_name or not mobile or not address:
                     st.warning("يرجى تعبئة جميع الحقول الأساسية (*).")
                 else:
-                    existing = ui.df(conn, "SELECT 1 FROM teachers WHERE national_id=?", (national_id,))
+                    existing = ui.df(conn, "SELECT 1 FROM teachers WHERE national_id=%s", (national_id,))
                     if not existing.empty:
                         st.error("رقم الهوية مسجل مسبقاً.")
                     else:
-                        conn.execute('''
+                        cur = conn.cursor()
+                        cur.execute('''
                             INSERT INTO teachers (national_id, full_name, salary, mobile, address,
                                 hire_date, experience_years, degree, specialization)
-                            VALUES (?,?,?,?,?,?,?,?,?)
+                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
                         ''', (national_id, full_name, salary, mobile, address, str(hire_date),
                               experience, degree, specialization))
                         conn.commit()
+                        cur.close()
                         st.success(f"تم إضافة المعلم/ة «{full_name}» بنجاح! 🎉")
                         st.rerun()
 
@@ -63,7 +65,7 @@ def render(conn):
             st.divider()
             st.markdown("##### ✏️ تعديل أو حذف معلم/ة")
             pick = st.selectbox("اختر المعلم/ة", teachers['full_name'] + " — " + teachers['national_id'],
-                                 index=None, placeholder="ابحث...")
+                                index=None, placeholder="ابحث...")
             if pick:
                 tid = pick.split(" — ")[-1]
                 row = teachers[teachers['national_id'] == tid].iloc[0]
@@ -78,17 +80,22 @@ def render(conn):
                     delete = b2.form_submit_button("🗑️ حذف")
 
                     if save:
-                        conn.execute("UPDATE teachers SET full_name=?, salary=?, mobile=? WHERE national_id=?",
-                                     (e_name, e_salary, e_mobile, tid))
+                        cur = conn.cursor()
+                        cur.execute("UPDATE teachers SET full_name=%s, salary=%s, mobile=%s WHERE national_id=%s",
+                                    (e_name, e_salary, e_mobile, tid))
                         conn.commit()
+                        cur.close()
                         st.success("تم حفظ التعديلات.")
                         st.rerun()
                     if delete:
-                        linked = ui.df(conn, "SELECT COUNT(*) c FROM classes WHERE teacher_id=?", (tid,)).iloc[0]['c']
+                        linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM classes WHERE teacher_id=%s", (tid,))
+                        linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
                         if linked > 0:
                             st.error(f"⚠️ هذا المعلم/ة مسؤول عن {linked} صف. يرجى إعادة تعيين الصف أولاً.")
                         else:
-                            conn.execute("DELETE FROM teachers WHERE national_id=?", (tid,))
+                            cur = conn.cursor()
+                            cur.execute("DELETE FROM teachers WHERE national_id=%s", (tid,))
                             conn.commit()
+                            cur.close()
                             st.success("تم الحذف.")
                             st.rerun()
