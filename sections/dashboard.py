@@ -53,12 +53,12 @@ def render(conn):
 
     # Render KPI Cards in Arabic with coordinated badge palettes
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    ui.kpi(c1, "🎒", " الطلاب", total_students, bg="#E9F5EC", fg="#219044")
-    ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
+    ui.kpi(c1, "🎒", "الطلاب", total_students, bg="#E9F5EC", fg="#219044")
+    ui.kpi(c2, "👩‍🏫", "المعلمات", total_teachers, bg="#F0F9FF", fg="#0284C7")
     ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
     ui.kpi(c4, "💰", " المقبوضات", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
     ui.kpi(c5, "⏳", "بانتظار التسجيل", pending, bg="#FEF3C7", fg="#D97706")
-    ui.kpi(c6, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
+    ui.kpi(c6, "🧾", "المستحقات ", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
 
     st.write("")
     left, right = st.columns([1.3, 1])
