@@ -17,8 +17,29 @@ LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "
 # Data
 # --------------------------------------------------------------------------
 def df(conn, sql, params=()):
-    """Run a query against the shared connection and return a DataFrame."""
-    return pd.read_sql_query(sql, conn, params=params)
+    """Run a query against the shared connection and return a clean DataFrame."""
+    try:
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+        
+        if not rows:
+            cur.close()
+            return pd.DataFrame()
+        
+        # Handle dict rows (RealDictCursor) or standard tuples
+        if isinstance(rows[0], dict):
+            data = rows
+            cols = list(rows[0].keys())
+            cur.close()
+            return pd.DataFrame(data, columns=cols)
+        else:
+            cols = [desc[0] for desc in cur.description] if cur.description else None
+            cur.close()
+            return pd.DataFrame(rows, columns=cols)
+    except Exception as e:
+        st.error(f"⚠️ Query error: {e}")
+        return pd.DataFrame()
 
 
 # --------------------------------------------------------------------------
