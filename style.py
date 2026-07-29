@@ -224,5 +224,93 @@ section[data-testid="stSidebar"][data-collapsed="true"] * {
         padding: 24px 18px !important;
     }
 }
+
+
+/* ---------------------------------------------------------------- */
+/* LOGIN FORM CARD ENHANCEMENTS                                     */
+/* ---------------------------------------------------------------- */
+
+/* Login Header Text Styling */
+.login-header {
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.login-header h2 {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #064E3B !important;
+    margin: 0 0 2px 0 !important;
+    text-align: center !important;
+}
+
+.login-header .subtitle-en {
+    font-size: 13px !important;
+    color: #64748B !important;
+    direction: ltr !important;
+    margin: 0 0 12px 0 !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+}
+
+.login-badge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.login-badge {
+    background-color: #ECFDF5;
+    color: #064E3B;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* Modern Card Styling for st.form */
+div[data-testid="stForm"] {
+    background: #FFFFFF !important;
+    border-radius: 20px !important;
+    padding: 32px 28px !important;
+    border: 1px solid #E2E8F0 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
+}
+
+/* Styled Input Fields */
+div[data-testid="stForm"] div[data-baseweb="input"] {
+    border-radius: 12px !important;
+    background-color: #F8FAFC !important;
+    border: 1px solid #CBD5E1 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+div[data-testid="stForm"] div[data-baseweb="input"]:focus-within {
+    border-color: #10B981 !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Button Refinement */
+div[data-testid="stForm"] .stButton > button {
+    background: #10B981 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 12px !important;
+    height: 46px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+    margin-top: 10px !important;
+}
+
+div[data-testid="stForm"] .stButton > button:hover {
+    background: #064E3B !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(6, 78, 59, 0.25) !important;
+}
+
 </style>
 """
