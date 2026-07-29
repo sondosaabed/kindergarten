@@ -3,11 +3,13 @@ sections/dashboard.py — لوحة التحكم (الرئيسية)
 
 Uses direct cursor evaluation for KPI values to prevent pandas DataFrame conversion errors.
 KPI cards are arranged in a 3x2 grid to prevent horizontal overflow when the sidebar opens.
+Custom Plotly charts replace raw st.bar_chart for emerald-themed visuals.
 """
 
 import streamlit as st
 import ui
 import helpers as H
+import plotly.express as px
 
 
 def _get_scalar(conn, query, params=()):
@@ -71,9 +73,9 @@ def render(conn):
     ui.kpi(r2_col3, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
 
     st.write("")
-    
+
     # ------------------------------------------------------------------
-    # Charts Section
+    # Charts Section (Styled with Emerald Theme via Plotly)
     # ------------------------------------------------------------------
     left, right = st.columns([1.3, 1])
 
@@ -90,7 +92,28 @@ def render(conn):
             if rev.empty:
                 ui.empty_state("لا توجد مقبوضات مسجلة بعد.")
             else:
-                st.bar_chart(rev.sort_values("الشهر").set_index("الشهر"))
+                rev_sorted = rev.sort_values("الشهر")
+                fig_rev = px.bar(
+                    rev_sorted,
+                    x="الشهر",
+                    y="المبلغ",
+                    text_auto=True
+                )
+                fig_rev.update_traces(
+                    marker_color="#10B981",
+                    marker_line_color="#059669",
+                    marker_line_width=1.5,
+                    textposition="outside"
+                )
+                fig_rev.update_layout(
+                    xaxis_title="",
+                    yaxis_title="",
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12)
+                )
+                st.plotly_chart(fig_rev, use_container_width=True, config={"displayModeBar": False})
 
     with right:
         with st.container(border=True):
@@ -105,7 +128,27 @@ def render(conn):
             if dist.empty:
                 ui.empty_state("لا توجد صفوف بعد.")
             else:
-                st.bar_chart(dist.set_index("الصف"))
+                fig_dist = px.bar(
+                    dist,
+                    x="الصف",
+                    y="العدد",
+                    text_auto=True
+                )
+                fig_dist.update_traces(
+                    marker_color="#0284C7",
+                    marker_line_color="#0369A1",
+                    marker_line_width=1.5,
+                    textposition="outside"
+                )
+                fig_dist.update_layout(
+                    xaxis_title="",
+                    yaxis_title="",
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12)
+                )
+                st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
 
     # ------------------------------------------------------------------
     # Recent Activity Table
@@ -123,4 +166,14 @@ def render(conn):
         if recent.empty:
             ui.empty_state("لا توجد تسجيلات بعد.")
         else:
-            st.dataframe(recent, use_container_width=True, hide_index=True)
+            st.dataframe(
+                recent,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "الحالة": st.column_config.TextColumn(
+                        "الحالة",
+                        help="حالة الطالب الحالية"
+                    )
+                }
+            )
