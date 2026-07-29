@@ -1,8 +1,7 @@
 """
 sections/students.py — إدارة الطلاب
 
-Add, search, edit and delete student records. Depends on at least one
-parent existing (a student must be linked to a father_id).
+Add, search, edit and delete student records.
 """
 
 import pandas as pd
@@ -51,19 +50,21 @@ def render(conn):
                     if not student_id or not full_name or not birth_place:
                         st.warning("يرجى تعبئة جميع الحقول الأساسية (*).")
                     else:
-                        existing = ui.df(conn, "SELECT 1 FROM students WHERE student_id = ?", (student_id,))
+                        existing = ui.df(conn, "SELECT 1 FROM students WHERE student_id = %s", (student_id,))
                         if not existing.empty:
                             st.error("رقم هوية الطالب مسجل مسبقاً. يرجى التحقق أو استخدام تبويب التعديل.")
                         else:
-                            conn.execute('''
+                            cur = conn.cursor()
+                            cur.execute('''
                                 INSERT INTO students
                                 (student_id, full_name, birth_date, birth_place, gender, id_type,
                                  nationality, has_medical_condition, medical_details, father_id, created_at)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             ''', (student_id, full_name, str(birth_date), birth_place, gender, id_type,
                                   nationality, 1 if medical else 0, medical_details,
                                   parent_options[father], H.now_str()))
                             conn.commit()
+                            cur.close()
                             st.success(f"تم تسجيل الطالب «{full_name}» بنجاح! 🎉")
                             st.rerun()
 
@@ -82,7 +83,7 @@ def render(conn):
             shown = students.copy()
             if search:
                 shown = shown[shown['full_name'].str.contains(search, na=False) |
-                               shown['student_id'].str.contains(search, na=False)]
+                              shown['student_id'].str.contains(search, na=False)]
             shown['العمر'] = shown['birth_date'].apply(H.calculate_age)
             display_cols = shown.rename(columns={
                 'student_id': 'رقم الهوية', 'full_name': 'الاسم', 'birth_date': 'تاريخ الميلاد',
@@ -94,7 +95,7 @@ def render(conn):
             st.divider()
             st.markdown("##### ✏️ تعديل أو حذف طالب")
             pick = st.selectbox("اختر الطالب", students['full_name'] + " — " + students['student_id'],
-                                 index=None, placeholder="ابحث عن طالب...")
+                                index=None, placeholder="ابحث عن طالب...")
             if pick:
                 sid = pick.split(" — ")[-1]
                 row = students[students['student_id'] == sid].iloc[0]
@@ -106,7 +107,7 @@ def render(conn):
 
                     c4, c5 = st.columns(2)
                     e_idtype = c4.selectbox("نوع الهوية", H.STUDENT_ID_TYPES,
-                                             index=H.STUDENT_ID_TYPES.index(row['id_type']) if row['id_type'] in H.STUDENT_ID_TYPES else 0)
+                                            index=H.STUDENT_ID_TYPES.index(row['id_type']) if row['id_type'] in H.STUDENT_ID_TYPES else 0)
                     e_nat = c5.text_input("الجنسية", value=row['nationality'])
 
                     e_medical = st.checkbox("يوجد حالة طبية", value=bool(row['has_medical_condition']))
@@ -117,18 +118,22 @@ def render(conn):
                     delete = b2.form_submit_button("🗑️ حذف الطالب")
 
                     if save:
-                        conn.execute('''
-                            UPDATE students SET full_name=?, birth_date=?, gender=?, id_type=?,
-                                nationality=?, has_medical_condition=?, medical_details=?
-                            WHERE student_id=?
+                        cur = conn.cursor()
+                        cur.execute('''
+                            UPDATE students SET full_name=%s, birth_date=%s, gender=%s, id_type=%s,
+                                nationality=%s, has_medical_condition=%s, medical_details=%s
+                            WHERE student_id=%s
                         ''', (e_name, str(e_bd), e_gender, e_idtype, e_nat,
                               1 if e_medical else 0, e_med_details, sid))
                         conn.commit()
+                        cur.close()
                         st.success("تم حفظ التعديلات.")
                         st.rerun()
 
                     if delete:
-                        conn.execute("DELETE FROM students WHERE student_id=?", (sid,))
+                        cur = conn.cursor()
+                        cur.execute("DELETE FROM students WHERE student_id=%s", (sid,))
                         conn.commit()
+                        cur.close()
                         st.success("تم حذف الطالب.")
                         st.rerun()
