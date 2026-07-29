@@ -1,8 +1,7 @@
 """
 sections/classes.py — الصفوف
 
-Add, view, edit and delete classes (class_type + section), and assign
-the responsible teacher.
+Add, view, edit and delete classes, and assign the responsible teacher.
 """
 
 import pandas as pd
@@ -31,15 +30,17 @@ def render(conn):
 
             submitted = st.form_submit_button("💾 حفظ الصف", type="primary")
             if submitted:
-                existing = ui.df(conn, "SELECT 1 FROM classes WHERE class_type=? AND section=?", (class_type, section))
+                existing = ui.df(conn, "SELECT 1 FROM classes WHERE class_type=%s AND section=%s", (class_type, section))
                 if not existing.empty:
                     st.error("هذا الصف (النوع + الشعبة) موجود مسبقاً.")
                 else:
-                    conn.execute('''
+                    cur = conn.cursor()
+                    cur.execute('''
                         INSERT INTO classes (class_type, section, class_name, teacher_id)
-                        VALUES (?,?,?,?)
+                        VALUES (%s,%s,%s,%s)
                     ''', (class_type, section, class_name, teacher_options[teacher_label]))
                     conn.commit()
+                    cur.close()
                     st.success("تم إضافة الصف بنجاح! 🎉")
                     st.rerun()
 
@@ -82,17 +83,22 @@ def render(conn):
                     delete = b2.form_submit_button("🗑️ حذف الصف")
 
                     if save:
-                        conn.execute("UPDATE classes SET class_name=?, teacher_id=? WHERE class_id=?",
-                                     (e_name, teacher_options[e_teacher], int(row['class_id'])))
+                        cur = conn.cursor()
+                        cur.execute("UPDATE classes SET class_name=%s, teacher_id=%s WHERE class_id=%s",
+                                    (e_name, teacher_options[e_teacher], int(row['class_id'])))
                         conn.commit()
+                        cur.close()
                         st.success("تم الحفظ.")
                         st.rerun()
                     if delete:
-                        linked = ui.df(conn, "SELECT COUNT(*) c FROM registrations WHERE class_id=?", (int(row['class_id']),)).iloc[0]['c']
+                        linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM registrations WHERE class_id=%s", (int(row['class_id']),))
+                        linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
                         if linked > 0:
                             st.error(f"⚠️ يوجد {linked} تسجيل مرتبط بهذا الصف. لا يمكن الحذف.")
                         else:
-                            conn.execute("DELETE FROM classes WHERE class_id=?", (int(row['class_id']),))
+                            cur = conn.cursor()
+                            cur.execute("DELETE FROM classes WHERE class_id=%s", (int(row['class_id']),))
                             conn.commit()
+                            cur.close()
                             st.success("تم الحذف.")
                             st.rerun()
