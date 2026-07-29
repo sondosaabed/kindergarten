@@ -508,5 +508,12 @@ div[data-testid="stHeadingWithHeadline"] > h6 {
     text-align: right !important;
     width: 100% !important;
 }
+
+/* Hide Streamlit default header and footer for client demos */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+div[data-testid="stDecoration"] {display: none;}
+div[data-testid="stToolbar"] {visibility: hidden;}
 </style>
 """
