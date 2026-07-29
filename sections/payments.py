@@ -3,8 +3,7 @@ sections/payments.py — الدفعات المالية
 
 Records a cash payment against a registration, updates the registration's
 status automatically, shows the remaining yearly balance, and offers a
-one-click printable receipt (see receipt.py) instead of relying on the
-browser's Ctrl/Cmd+P.
+one-click printable receipt.
 """
 
 import streamlit as st
@@ -41,9 +40,6 @@ def render(conn):
         selected_row = active_regs[active_regs['label'] == selected_label].iloc[0]
         reg_id_preview = int(selected_row['registration_id'])
 
-        # Show where this student stands before taking a new payment —
-        # the annual tuition (registration fee included) is fixed at
-        # ANNUAL_TUITION per student per year.
         paid_so_far = H.compute_paid_toward_tuition(conn, reg_id_preview)
         remaining_before = H.compute_remaining_balance(conn, reg_id_preview)
         i1, i2, i3 = st.columns(3)
@@ -66,13 +62,17 @@ def render(conn):
             reg_id = int(selected_row['registration_id'])
             today = H.today_str()
             cur = conn.cursor()
+            # PostgreSQL RETURNING clause to get inserted receipt_number / ID
             cur.execute('''
                 INSERT INTO payments (registration_id, amount, payment_date, payment_method,
                     payer_name, payment_for, payment_for_other)
-                VALUES (?, ?, ?, 'كاش', ?, ?, ?)
+                VALUES (%s, %s, %s, 'كاش', %s, %s, %s)
+                RETURNING receipt_number
             ''', (reg_id, amount, today, payer, reason, reason_other))
+            receipt_id = cur.fetchone()['receipt_number']
             conn.commit()
-            receipt_id = cur.lastrowid
+            cur.close()
+
             new_status = H.refresh_registration_status(conn, reg_id)
             remaining_after = H.compute_remaining_balance(conn, reg_id)
 
@@ -106,6 +106,6 @@ def render(conn):
             shown = payments.copy()
             if search:
                 shown = shown[shown["اسم الطالب"].str.contains(search, na=False) |
-                               shown["الدافع"].str.contains(search, na=False)]
+                              shown["الدافع"].str.contains(search, na=False)]
             st.dataframe(shown, use_container_width=True, hide_index=True)
             st.metric("💰 مجموع الدفعات المعروضة", H.format_money(shown["المبلغ"].sum()))
