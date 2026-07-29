@@ -2,6 +2,7 @@
 sections/dashboard.py — لوحة التحكم (الرئيسية)
 
 Uses direct cursor evaluation for KPI values to prevent pandas DataFrame conversion errors.
+KPI cards are arranged in a 3x2 grid to prevent horizontal overflow when the sidebar opens.
 """
 
 import streamlit as st
@@ -51,16 +52,29 @@ def render(conn):
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """, (H.ANNUAL_TUITION,)))
 
-    # Render KPI Cards in Arabic with coordinated badge palettes
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    ui.kpi(c1, "🎒", "الطلاب", total_students, bg="#E9F5EC", fg="#219044")
-    ui.kpi(c2, "👩‍🏫", "المعلمات", total_teachers, bg="#F0F9FF", fg="#0284C7")
-    ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
-    ui.kpi(c4, "💰", " المقبوضات", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
-    ui.kpi(c5, "⏳", "بانتظار التسجيل", pending, bg="#FEF3C7", fg="#D97706")
-    ui.kpi(c6, "🧾", "المستحقات ", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
+    # ------------------------------------------------------------------
+    # KPI Grid Row 1: Key Operational Counts
+    # ------------------------------------------------------------------
+    r1_col1, r1_col2, r1_col3 = st.columns(3)
+    ui.kpi(r1_col1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
+    ui.kpi(r1_col2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
+    ui.kpi(r1_col3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
+
+    st.write("")  # Vertical spacer between rows
+
+    # ------------------------------------------------------------------
+    # KPI Grid Row 2: Financial Metrics & Pending Registrations
+    # ------------------------------------------------------------------
+    r2_col1, r2_col2, r2_col3 = st.columns(3)
+    ui.kpi(r2_col1, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
+    ui.kpi(r2_col2, "⏳", "بانتظار التسجيل", pending, bg="#FEF3C7", fg="#D97706")
+    ui.kpi(r2_col3, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
 
     st.write("")
+    
+    # ------------------------------------------------------------------
+    # Charts Section
+    # ------------------------------------------------------------------
     left, right = st.columns([1.3, 1])
 
     with left:
@@ -93,6 +107,9 @@ def render(conn):
             else:
                 st.bar_chart(dist.set_index("الصف"))
 
+    # ------------------------------------------------------------------
+    # Recent Activity Table
+    # ------------------------------------------------------------------
     with st.container(border=True):
         st.markdown("##### 🕓 آخر عمليات التسجيل")
         recent = ui.df(conn, """
