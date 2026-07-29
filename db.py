@@ -12,15 +12,27 @@ import streamlit as st
 def get_connection():
     """
     Connects to PostgreSQL using secrets configured in Streamlit Cloud (.streamlit/secrets.toml)
-    or falls back to an environment variable DB_URL.
+    or falls back to an environment variable DATABASE_URL.
     """
+    db_url = None
+
+    # 1. Check Streamlit secrets first
     if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
         db_url = st.secrets["postgres"]["url"]
-    else:
-        db_url = os.environ.get(
-            "DATABASE_URL",
-            "postgresql://postgres:password@localhost:5432/postgres"
+    # 2. Check system environment variable second
+    elif "DATABASE_URL" in os.environ:
+        db_url = os.environ["DATABASE_URL"]
+
+    # If no valid connection string is provided, fail with a helpful error message instead of trying localhost
+    if not db_url:
+        raise ValueError(
+            "Database URL not configured! Please check your Streamlit Cloud secrets configuration."
         )
+
+    # Automatically append sslmode=require for cloud PostgreSQL hosts if missing
+    if "sslmode" not in db_url:
+        separator = "&" if "?" in db_url else "?"
+        db_url = f"{db_url}{separator}sslmode=require"
 
     conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
     conn.autocommit = False
@@ -32,7 +44,6 @@ def _safe_add_column(cursor, table, column_def):
     try:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def};")
     except psycopg2.errors.DuplicateColumn:
-        # Postgres throws DuplicateColumn if the column already exists
         pass
     except Exception as e:
         if "already exists" not in str(e).lower():
