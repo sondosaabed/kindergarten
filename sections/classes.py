@@ -68,7 +68,15 @@ def render(conn):
                 WHERE year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
                 GROUP BY class_id
             """)
-            classes_display = classes.merge(counts, on='class_id', how='left').fillna({'n': 0})
+            
+            if counts.empty or 'class_id' not in counts.columns:
+                classes_display = classes.copy()
+                classes_display['n'] = 0
+            else:
+                classes_display = classes.merge(counts, on='class_id', how='left').fillna({'n': 0})
+
+            classes_display['n'] = classes_display['n'].astype(int)
+
             st.dataframe(classes_display.rename(columns={
                 'class_type': 'النوع', 'section': 'الشعبة', 'class_name': 'الاسم',
                 'teacher_name': 'المعلم/ة المسؤول/ة', 'n': 'عدد الطلاب (السنة الحالية)'
