@@ -2,6 +2,8 @@
 sections/classes.py — الصفوف
 
 Add, view, edit and delete classes, and assign the responsible teacher.
+Same reliability/UX pattern as parents.py: try/except + conn.rollback()
+around every write, (id, label) tuple pickers, edit form in an expander.
 """
 
 import pandas as pd
@@ -12,7 +14,7 @@ import helpers as H
 
 
 def render(conn):
-    ui.section_header(" 🏷️ ", "الصفوف", "تنظيم الشعب وتعيين المعلمات")
+    ui.section_header("🏷️", "الصفوف", "تنظيم الشعب وتعيين المعلمات")
 
     tab_add, tab_view = st.tabs(["➕ إضافة صف", "📋 عرض / تعديل / حذف"])
 
@@ -20,30 +22,38 @@ def render(conn):
     teacher_options = {"— بدون تعيين —": None}
     teacher_options.update({r.full_name: r.national_id for r in teachers_df.itertuples()})
 
+    # -------------------------------------------------- TAB 1: ADD CLASS --
     with tab_add:
         with st.form("add_class_form", clear_on_submit=True):
             c1, c2, c3 = st.columns(3)
-            class_type = c1.selectbox("نوع الصف", H.CLASS_TYPES)
-            section = c2.selectbox("الشعبة", H.SECTIONS)
-            class_name = c3.text_input("اسم الصف (اختياري)", placeholder="مثال: صف الورود")
+            class_type = c1.selectbox("نوع الصف *", H.CLASS_TYPES)
+            section = c2.selectbox("الشعبة *", H.SECTIONS)
+            class_name = c3.text_input("اسم الصف (اختياري)", placeholder="مثال: صف الورود").strip()
             teacher_label = st.selectbox("المعلم/ة المسؤول/ة", list(teacher_options.keys()))
 
-            submitted = st.form_submit_button("💾 حفظ الصف", type="primary")
-            if submitted:
-                existing = ui.df(conn, "SELECT 1 FROM classes WHERE class_type=%s AND section=%s", (class_type, section))
-                if not existing.empty:
-                    st.error("هذا الصف (النوع + الشعبة) موجود مسبقاً.")
-                else:
-                    cur = conn.cursor()
-                    cur.execute('''
-                        INSERT INTO classes (class_type, section, class_name, teacher_id)
-                        VALUES (%s,%s,%s,%s)
-                    ''', (class_type, section, class_name, teacher_options[teacher_label]))
-                    conn.commit()
-                    cur.close()
-                    st.success("تم إضافة الصف بنجاح! 🎉")
-                    st.rerun()
+            submitted = st.form_submit_button("💾 حفظ الصف", type="primary", use_container_width=True)
 
+            if submitted:
+                existing = ui.df(conn, "SELECT 1 FROM classes WHERE class_type=%s AND section=%s",
+                                  (class_type, section))
+                if not existing.empty:
+                    st.error("❌ هذا الصف (النوع + الشعبة) موجود مسبقاً.")
+                else:
+                    try:
+                        cur = conn.cursor()
+                        cur.execute('''
+                            INSERT INTO classes (class_type, section, class_name, teacher_id)
+                            VALUES (%s,%s,%s,%s)
+                        ''', (class_type, section, class_name, teacher_options[teacher_label]))
+                        conn.commit()
+                        cur.close()
+                        st.success("✅ تم إضافة الصف بنجاح! 🎉")
+                        st.rerun()
+                    except Exception as e:
+                        conn.rollback()
+                        st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
+
+    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
     with tab_view:
         classes = ui.df(conn, """
             SELECT c.class_id, c.class_type, c.section, c.class_name, t.full_name AS teacher_name,
@@ -58,47 +68,66 @@ def render(conn):
                 WHERE year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
                 GROUP BY class_id
             """)
-            classes = classes.merge(counts, on='class_id', how='left').fillna({'n': 0})
-            st.dataframe(classes.rename(columns={
+            classes_display = classes.merge(counts, on='class_id', how='left').fillna({'n': 0})
+            st.dataframe(classes_display.rename(columns={
                 'class_type': 'النوع', 'section': 'الشعبة', 'class_name': 'الاسم',
                 'teacher_name': 'المعلم/ة المسؤول/ة', 'n': 'عدد الطلاب (السنة الحالية)'
             })[['النوع', 'الشعبة', 'الاسم', 'المعلم/ة المسؤول/ة', 'عدد الطلاب (السنة الحالية)']],
                 use_container_width=True, hide_index=True)
 
-            st.divider()
+            st.markdown("---")
             st.markdown("##### ✏️ تعديل أو حذف صف")
+
             classes['label'] = classes['class_type'] + " " + classes['section'] + \
                                 classes['class_name'].fillna('').apply(lambda x: f" ({x})" if x else "")
-            pick = st.selectbox("اختر الصف", classes['label'], index=None, placeholder="اختر...")
-            if pick:
-                row = classes[classes['label'] == pick].iloc[0]
-                with st.form("edit_class_form"):
-                    e_name = st.text_input("اسم الصف", value=row['class_name'] or "")
-                    current_teacher = row['teacher_name'] if pd.notna(row['teacher_name']) else "— بدون تعيين —"
-                    idx = list(teacher_options.keys()).index(current_teacher) if current_teacher in teacher_options else 0
-                    e_teacher = st.selectbox("المعلم/ة المسؤول/ة", list(teacher_options.keys()), index=idx)
+            class_options = [(int(row['class_id']), row['label']) for _, row in classes.iterrows()]
+            selected = st.selectbox(
+                "اختر الصف", options=class_options,
+                format_func=lambda x: x[1] if x else "اختر...",
+                index=None, placeholder="اختر...", key="class_select_edit",
+            )
 
-                    b1, b2 = st.columns(2)
-                    save = b1.form_submit_button("💾 حفظ", type="primary")
-                    delete = b2.form_submit_button("🗑️ حذف الصف")
+            if selected:
+                cid = selected[0]
+                row = classes[classes['class_id'] == cid].iloc[0]
 
-                    if save:
-                        cur = conn.cursor()
-                        cur.execute("UPDATE classes SET class_name=%s, teacher_id=%s WHERE class_id=%s",
-                                    (e_name, teacher_options[e_teacher], int(row['class_id'])))
-                        conn.commit()
-                        cur.close()
-                        st.success("تم الحفظ.")
-                        st.rerun()
-                    if delete:
-                        linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM registrations WHERE class_id=%s", (int(row['class_id']),))
-                        linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
-                        if linked > 0:
-                            st.error(f"⚠️ يوجد {linked} تسجيل مرتبط بهذا الصف. لا يمكن الحذف.")
-                        else:
-                            cur = conn.cursor()
-                            cur.execute("DELETE FROM classes WHERE class_id=%s", (int(row['class_id']),))
-                            conn.commit()
-                            cur.close()
-                            st.success("تم الحذف.")
-                            st.rerun()
+                with st.expander(f"⚙️ تعديل بيانات: {row['label']}", expanded=True):
+                    with st.form("edit_class_form"):
+                        e_name = st.text_input("اسم الصف", value=row['class_name'] or "")
+                        current_teacher = row['teacher_name'] if pd.notna(row['teacher_name']) else "— بدون تعيين —"
+                        idx = list(teacher_options.keys()).index(current_teacher) if current_teacher in teacher_options else 0
+                        e_teacher = st.selectbox("المعلم/ة المسؤول/ة", list(teacher_options.keys()), index=idx)
+
+                        b1, b2 = st.columns(2)
+                        save = b1.form_submit_button("💾 حفظ", type="primary", use_container_width=True)
+                        delete = b2.form_submit_button("🗑️ حذف الصف", use_container_width=True)
+
+                        if save:
+                            try:
+                                cur = conn.cursor()
+                                cur.execute("UPDATE classes SET class_name=%s, teacher_id=%s WHERE class_id=%s",
+                                            (e_name, teacher_options[e_teacher], cid))
+                                conn.commit()
+                                cur.close()
+                                st.success("✅ تم الحفظ.")
+                                st.rerun()
+                            except Exception as e:
+                                conn.rollback()
+                                st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
+
+                        if delete:
+                            linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM registrations WHERE class_id=%s", (cid,))
+                            linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
+                            if linked > 0:
+                                st.error(f"⚠️ يوجد {linked} تسجيل مرتبط بهذا الصف. لا يمكن الحذف.")
+                            else:
+                                try:
+                                    cur = conn.cursor()
+                                    cur.execute("DELETE FROM classes WHERE class_id=%s", (cid,))
+                                    conn.commit()
+                                    cur.close()
+                                    st.warning("🗑️ تم حذف الصف بنجاح!")
+                                    st.rerun()
+                                except Exception as e:
+                                    conn.rollback()
+                                    st.error(f"❌ حدث خطأ أثناء الحذف: {e}")
