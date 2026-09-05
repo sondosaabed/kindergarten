@@ -31,7 +31,7 @@ def render(conn):
                 mother_id_type = st.selectbox("نوع هوية الأم", H.PARENT_ID_TYPES, key="m_id_type")
                 mother_name = st.text_input("اسم الأم رباعي *", key="m_name").strip()
                 mother_mobile = st.text_input("جوال الأم", key="m_mob").strip()
-                mother_job = st.selectbox("عمل الأم", H.MOTHER_JOB, key="m_job_stat")
+                mother_job = st.selectbox("عمل الأم", H.MOTHER_JOB, key="m_job")
 
             st.markdown("---")
             c3, c4 = st.columns(2)
