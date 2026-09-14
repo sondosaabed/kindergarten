@@ -166,17 +166,17 @@ RECEIPT_TEMPLATE = """
             </div>
             <div class="receipt-header">
                 <h3>🧾 وصل استلام نقدية</h3>
-                <span class="copy-badge">نسخة المدرسة</span>
+                <span class="copy-badge">نسخة الروضة</span>
             </div>
             <div class="receipt-grid">
                 <div class="receipt-row"><span>رقم الوصل:</span><b>#{receipt_id}</b></div>
                 <div class="receipt-row"><span>التاريخ:</span><b>{date}</b></div>
                 <div class="receipt-row full-width"><span>اسم الطالب:</span><b>{student_name}</b></div>
                 <div class="receipt-row full-width"><span>وصلنا من السيد/ة:</span><b>{payer}</b></div>
-                <div class="receipt-row"><span>مبلغ وقدره:</span><b>{amount} شيكل/دينار</b></div>
+                <div class="receipt-row"><span>مبلغ وقدره:</span><b>{amount} شيكل </b></div>
                 <div class="receipt-row"><span>طريقة الدفع:</span><b>كاش 💵</b></div>
                 <div class="receipt-row full-width"><span>مقابل:</span><b>{reason}</b></div>
-                <div class="receipt-row full-width balance"><span>المبلغ المتبقي لهذه السنة:</span><b>{remaining} شيكل/دينار</b></div>
+                <div class="receipt-row full-width balance"><span>المبلغ المتبقي لهذه السنة:</span><b>{remaining} شيكل </b></div>
             </div>
         </div>
 
@@ -201,10 +201,10 @@ RECEIPT_TEMPLATE = """
                 <div class="receipt-row"><span>التاريخ:</span><b>{date}</b></div>
                 <div class="receipt-row full-width"><span>اسم الطالب:</span><b>{student_name}</b></div>
                 <div class="receipt-row full-width"><span>وصلنا من السيد/ة:</span><b>{payer}</b></div>
-                <div class="receipt-row"><span>مبلغ وقدره:</span><b>{amount} شيكل/دينار</b></div>
+                <div class="receipt-row"><span>مبلغ وقدره:</span><b>{amount} شيكل</b></div>
                 <div class="receipt-row"><span>طريقة الدفع:</span><b>كاش 💵</b></div>
                 <div class="receipt-row full-width"><span>مقابل:</span><b>{reason}</b></div>
-                <div class="receipt-row full-width balance"><span>المبلغ المتبقي لهذه السنة:</span><b>{remaining} شيكل/دينار</b></div>
+                <div class="receipt-row full-width balance"><span>المبلغ المتبقي لهذه السنة:</span><b>{remaining} شيكل</b></div>
             </div>
         </div>
     </div>
