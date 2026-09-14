@@ -104,7 +104,7 @@ def render(conn):
                 shown.drop(columns=["registration_id", "class_id", "paid_toward_tuition"]),
                 use_container_width=True, hide_index=True
             )
-            st.caption(f"💡 الرسوم السنوية لكل طالب: {H.format_money(H.ANNUAL_TUITION)} شيكل/دينار (شاملة رسوم التسجيل).")
+            st.caption(f"💡 الرسوم السنوية لكل طالب: {H.format_money(H.ANNUAL_TUITION)} شيكل (شاملة رسوم التسجيل).")
 
             st.markdown("---")
             st.markdown("##### ✏️ تعديل (نقل صف) أو حذف تسجيل")
