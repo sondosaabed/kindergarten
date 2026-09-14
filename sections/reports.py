@@ -1,7 +1,7 @@
 """
 sections/reports.py — التقارير والتصدير
 
-Filtered report views with Excel/CSV export buttons and an in-browser printable roster sheet.
+Filtered report views with direct browser printing (PDF) and Excel/CSV exports.
 """
 
 import io
@@ -21,28 +21,25 @@ def _to_excel(df: pd.DataFrame) -> bytes:
     return output.getvalue()
 
 
-def _render_printable_attendance_sheet(class_name: str, year_id: str, df: pd.DataFrame):
-    """Generates an in-iframe HTML template with a window.print() button for printing a clean roster sheet."""
-    logo_b64 = ui._logo_base64()
-    logo_img_tag = f'<img src="data:image/png;base64,{logo_b64}" />' if logo_b64 else ""
-
+def _render_printable_roster_pdf(
+    class_name: str,
+    academic_year: str,
+    df: pd.DataFrame,
+    include_attendance: bool,
+):
+    """Renders a print-ready iframe with a 'Print/Save to PDF' button."""
+    
+    # Generate HTML headers dynamically
+    headers_html = "".join([f"<th>{col}</th>" for col in df.columns])
+    
+    # Generate HTML rows dynamically
     rows_html = ""
     for _, row in df.iterrows():
-        rows_html += f"""
-        <tr>
-            <td style="text-align:center;">{row['م']}</td>
-            <td><b>{row['اسم الطالب']}</b></td>
-            <td style="text-align:center;">{row['الجنس']}</td>
-            <td>{row['اسم الأب']}</td>
-            <td style="direction:ltr; text-align:right;">{row['جوال الأب']}</td>
-            <td class="att-cell"></td>
-            <td class="att-cell"></td>
-            <td class="att-cell"></td>
-            <td class="att-cell"></td>
-            <td class="att-cell"></td>
-            <td class="notes-cell"></td>
-        </tr>
-        """
+        cells = "".join([f"<td>{str(val) if pd.notna(val) else ''}</td>" for val in row])
+        rows_html += f"<tr>{cells}</tr>"
+
+    logo_b64 = ui._logo_base64()
+    logo_img_tag = f'<img src="data:image/png;base64,{logo_b64}" />' if logo_b64 else ""
 
     html_content = f"""
     <!DOCTYPE html>
@@ -51,97 +48,127 @@ def _render_printable_attendance_sheet(class_name: str, year_id: str, df: pd.Dat
     <meta charset="utf-8">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-        * {{ box-sizing: border-box; font-family: 'Cairo', sans-serif; }}
-        body {{ direction: rtl; text-align: right; margin: 0; padding: 10px; background: #fff; }}
         
-        .header {{
+        * {{
+            box-sizing: border-box;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+        }}
+        body {{
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 15px;
+            background: #fff;
+            color: #1F2A22;
+        }}
+        .print-header {{
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-bottom: 2px solid #163D22;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }}
-        .header-logo {{ display: flex; align-items: center; gap: 10px; }}
-        .header-logo img {{ width: 48px; height: 48px; border-radius: 50%; }}
-        .header-title h2 {{ margin: 0; color: #163D22; font-size: 18px; }}
-        .header-title p {{ margin: 2px 0 0 0; color: #666; font-size: 12px; }}
-        .meta-info {{ font-size: 13px; font-weight: bold; color: #333; }}
-
+        .header-brand {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        .header-brand img {{
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }}
+        .brand-titles .ar {{ font-size: 15px; font-weight: 800; color: #163D22; }}
+        .brand-titles .en {{ font-size: 10px; color: #7C8A7E; }}
+        .report-meta {{
+            text-align: left;
+            font-size: 12px;
+            color: #475569;
+        }}
+        .report-title {{
+            text-align: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #163D22;
+            margin: 10px 0 15px 0;
+            background: #FAF9F5;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px dashed #D7A431;
+        }}
         table {{
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
-            margin-top: 10px;
+            margin-top: 5px;
         }}
         th, td {{
-            border: 1px solid #163D22;
-            padding: 5px 6px;
-            vertical-align: middle;
-        }}
-        th {{
-            background-color: #f2f7f4;
-            color: #163D22;
-            font-weight: 700;
+            border: 1px solid #CBD5E1;
+            padding: 6px 8px;
             text-align: center;
         }}
-        .att-cell {{ width: 38px; }}
-        .notes-cell {{ width: 90px; }}
-
+        th {{
+            background-color: #163D22;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+        }}
+        tr:nth-child(even) {{
+            background-color: #F8FAFC;
+        }}
         .print-btn {{
             display: block;
             width: 100%;
             background: #163D22;
-            color: #fff;
+            color: white;
             border: none;
-            border-radius: 8px;
             padding: 10px 0;
             font-size: 14px;
             font-weight: 700;
+            border-radius: 8px;
             cursor: pointer;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }}
-        .print-btn:hover {{ opacity: .9; }}
+        .print-btn:hover {{
+            opacity: 0.9;
+        }}
 
         @media print {{
             .print-btn {{ display: none; }}
             body {{ padding: 0; }}
-            @page {{ size: A4 portrait; margin: 8mm; }}
+            @page {{
+                size: A4 {"landscape" if include_attendance else "portrait"};
+                margin: 10mm;
+            }}
         }}
     </style>
     </head>
     <body>
-        <button class="print-btn" onclick="window.print()">🖨️ طباعة كشف الحضور والغياب (A4)</button>
-        
-        <div class="header">
-            <div class="header-logo">
+        <button class="print-btn" onclick="window.print()">🖨️ اضغط هنا للطباعة أو الحفظ كـ PDF</button>
+
+        <div class="print-header">
+            <div class="header-brand">
                 {logo_img_tag}
-                <div class="header-title">
-                    <h2>روضة مؤسسة شباب البيرة</h2>
-                    <p>Al-Bireh Youth Foundation Kindergarten</p>
+                <div class="brand-titles">
+                    <div class="ar">روضة مؤسسة شباب البيرة</div>
+                    <div class="en">Al-Bireh Youth Foundation Kindergarten</div>
                 </div>
             </div>
-            <div class="meta-info">
-                <div>كشف حضور وغياب — <b>{class_name}</b></div>
-                <div>السنة الدراسية: <b>{year_id}</b></div>
+            <div class="report-meta">
+                <div><strong>الصف:</strong> {class_name}</div>
+                <div><strong>السنة الدراسية:</strong> {academic_year}</div>
+                <div><strong>تاريخ الاستخراج:</strong> {H.today_str()}</div>
             </div>
+        </div>
+
+        <div class="report-title">
+            كشف أسماء الطلاب {"والحضور" if include_attendance else ""} — {class_name} ({len(df)} طالب)
         </div>
 
         <table>
             <thead>
-                <tr>
-                    <th style="width:25px;">م</th>
-                    <th>اسم الطالب</th>
-                    <th style="width:40px;">الجنس</th>
-                    <th>اسم ولي الأمر</th>
-                    <th>رقم التواصل</th>
-                    <th class="att-cell">الأحد</th>
-                    <th class="att-cell">الإثنين</th>
-                    <th class="att-cell">الثلاثاء</th>
-                    <th class="att-cell">الأربعاء</th>
-                    <th class="att-cell">الخميس</th>
-                    <th class="notes-cell">ملاحظات</th>
-                </tr>
+                <tr>{headers_html}</tr>
             </thead>
             <tbody>
                 {rows_html}
@@ -150,11 +177,14 @@ def _render_printable_attendance_sheet(class_name: str, year_id: str, df: pd.Dat
     </body>
     </html>
     """
-    components.html(html_content, height=650, scrolling=True)
+    
+    # Set iframe height based on column size
+    height = 650 if len(df) > 10 else 450
+    components.html(html_content, height=height, scrolling=True)
 
 
 def render(conn):
-    ui.section_header("📈", "التقارير والتصدير", "استخراج بيانات مفلترة وتصديرها إلى Excel أو طباعتها")
+    ui.section_header("📈", "التقارير والتصدير", "استخراج بيانات مفلترة وتصديرها إلى Excel")
 
     report_type = st.radio(
         "اختر نوع التقرير",
@@ -170,6 +200,8 @@ def render(conn):
 
     st.markdown("---")
 
+    result = pd.DataFrame()
+
     # --------------------------------------------------------------------------
     # 1. CLASS ROSTER & ATTENDANCE SHEET REPORT
     # --------------------------------------------------------------------------
@@ -184,7 +216,7 @@ def render(conn):
             ui.empty_state("لا توجد صفوف معرفة في النظام.")
             return
 
-        c1, c2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
         class_options = dict(zip(classes_df['class_name'], classes_df['class_id']))
         selected_class_name = c1.selectbox("اختر الصف *", list(class_options.keys()))
         selected_class_id = class_options[selected_class_name]
@@ -192,6 +224,8 @@ def render(conn):
         years = ui.df(conn, "SELECT year_id FROM academic_years ORDER BY is_current DESC, year_id DESC")
         year_list = years['year_id'].tolist() if not years.empty else [H.CURRENT_YEAR_DEFAULT]
         selected_year = c2.selectbox("السنة الدراسية", year_list)
+
+        include_attendance_cols = c3.checkbox("إضافة أعمدة لتسجيل الحضور والغياب (للطباعة)", value=True)
 
         query = """
             SELECT 
@@ -213,11 +247,21 @@ def render(conn):
 
         if not result.empty:
             result.insert(0, "م", range(1, len(result) + 1))
+
+            if include_attendance_cols:
+                for day in ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "ملاحظات"]:
+                    result[day] = ""
+
             st.success(f"📋 عدد الطلاب في **{selected_class_name}**: **{len(result)} طالب/طالبة**")
 
-            # Expandable Section to Print Attendance Sheet directly from browser
-            with st.expander("🖨️ المعاينة والطباعة المباشرة لكشف الحضور (ورقي)", expanded=True):
-                _render_printable_attendance_sheet(selected_class_name, selected_year, result)
+            # PDF / Direct Printable Preview
+            with st.expander("🖨️ معاينة وتوليد طباعة كشف الأسماء (PDF)", expanded=False):
+                _render_printable_roster_pdf(
+                    selected_class_name,
+                    selected_year,
+                    result,
+                    include_attendance_cols,
+                )
 
     # --------------------------------------------------------------------------
     # 2. FINANCIAL CASH RECEIPTS REPORT
@@ -301,7 +345,7 @@ def render(conn):
             SELECT r.registration_id, s.full_name AS student_name, p.father_name, p.father_mobile,
                    (c.class_type || ' ' || c.section) AS class_label, r.status
             FROM registrations r
-            JOIN students s ON s.student_id = r.student_id
+            JOIN students s ON r.student_id = s.student_id
             JOIN classes c ON c.class_id = r.class_id
             JOIN parents p ON p.father_id = s.father_id
             WHERE r.year_id = %s AND r.status != 'انسحب'
@@ -334,13 +378,14 @@ def render(conn):
             k2.metric("إجمالي الديون المتبقية", H.format_money(result["المتبقي عليه (شيكل)"].sum()))
 
     # --------------------------------------------------------------------------
-    # DATAFRAME DISPLAY & DOWNLOAD BUTTONS (EXCEL / CSV)
+    # RENDER DATAFRAME & EXPORT CONTROLS
     # --------------------------------------------------------------------------
     if not result.empty:
-        st.markdown("##### 📊 جدول البيانات")
         st.dataframe(result, use_container_width=True, hide_index=True)
 
+        st.markdown("##### 📥 تصدير التقرير")
         c1, c2 = st.columns(2)
+        # Excel Download
         c1.download_button(
             "📊 تحميل التقرير كملف Excel",
             data=_to_excel(result),
@@ -349,6 +394,7 @@ def render(conn):
             use_container_width=True,
         )
 
+        # CSV Download
         csv_data = result.to_csv(index=False).encode('utf-8-sig')
         c2.download_button(
             "📄 تحميل التقرير كملف CSV",
