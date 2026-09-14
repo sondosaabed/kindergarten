@@ -226,7 +226,7 @@ def render(conn):
 
         query = """
             SELECT 
-                s.national_id AS "رقم الهوية",
+                s.student_id AS "رقم الهوية",
                 s.full_name AS "اسم الطالب",
                 s.gender AS "الجنس",
                 s.birth_date AS "تاريخ الميلاد",
