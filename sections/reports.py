@@ -29,10 +29,8 @@ def _render_printable_roster_pdf(
 ):
     """Renders a print-ready iframe with a 'Print/Save to PDF' button."""
     
-    # Generate HTML headers dynamically
     headers_html = "".join([f"<th>{col}</th>" for col in df.columns])
     
-    # Generate HTML rows dynamically
     rows_html = ""
     for _, row in df.iterrows():
         cells = "".join([f"<td>{str(val) if pd.notna(val) else ''}</td>" for val in row])
@@ -178,7 +176,6 @@ def _render_printable_roster_pdf(
     </html>
     """
     
-    # Set iframe height based on column size
     height = 650 if len(df) > 10 else 450
     components.html(html_content, height=height, scrolling=True)
 
@@ -221,7 +218,7 @@ def render(conn):
         selected_class_name = c1.selectbox("اختر الصف *", list(class_options.keys()))
         selected_class_id = class_options[selected_class_name]
 
-        years = ui.df(conn, "SELECT year_id FROM academic_years ORDER BY is_current DESC, year_id DESC")
+        years = ui.df(conn, "SELECT year_id FROM academic_years ORDER BY year_id DESC")
         year_list = years['year_id'].tolist() if not years.empty else [H.CURRENT_YEAR_DEFAULT]
         selected_year = c2.selectbox("السنة الدراسية", year_list)
 
@@ -254,7 +251,6 @@ def render(conn):
 
             st.success(f"📋 عدد الطلاب في **{selected_class_name}**: **{len(result)} طالب/طالبة**")
 
-            # PDF / Direct Printable Preview
             with st.expander("🖨️ معاينة وتوليد طباعة كشف الأسماء (PDF)", expanded=False):
                 _render_printable_roster_pdf(
                     selected_class_name,
@@ -337,7 +333,7 @@ def render(conn):
     # 5. OUTSTANDING BALANCES / DEBTORS REPORT
     # --------------------------------------------------------------------------
     else:  # "⚠️ كشف الديون والذمم المتبقية"
-        years_df = ui.df(conn, "SELECT year_id FROM academic_years ORDER BY is_current DESC, year_id DESC")
+        years_df = ui.df(conn, "SELECT year_id FROM academic_years ORDER BY year_id DESC")
         year_list = years_df['year_id'].tolist() if not years_df.empty else [H.CURRENT_YEAR_DEFAULT]
         selected_year = st.selectbox("السنة الدراسية", year_list, key="debt_year")
 
@@ -345,7 +341,7 @@ def render(conn):
             SELECT r.registration_id, s.full_name AS student_name, p.father_name, p.father_mobile,
                    (c.class_type || ' ' || c.section) AS class_label, r.status
             FROM registrations r
-            JOIN students s ON r.student_id = s.student_id
+            JOIN students s ON s.student_id = r.student_id
             JOIN classes c ON c.class_id = r.class_id
             JOIN parents p ON p.father_id = s.father_id
             WHERE r.year_id = %s AND r.status != 'انسحب'
@@ -385,7 +381,6 @@ def render(conn):
 
         st.markdown("##### 📥 تصدير التقرير")
         c1, c2 = st.columns(2)
-        # Excel Download
         c1.download_button(
             "📊 تحميل التقرير كملف Excel",
             data=_to_excel(result),
@@ -394,7 +389,6 @@ def render(conn):
             use_container_width=True,
         )
 
-        # CSV Download
         csv_data = result.to_csv(index=False).encode('utf-8-sig')
         c2.download_button(
             "📄 تحميل التقرير كملف CSV",
