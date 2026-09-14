@@ -64,20 +64,22 @@ def render(conn):
         except (ValueError, TypeError):
             students_count = 0
 
-        raw_revenue = _get_scalar(
-            conn,
-            "SELECT COALESCE(SUM(amount), 0) FROM payments "
-            "WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')"
-        )
-        try:
-            month_revenue = float(raw_revenue)
-        except (ValueError, TypeError):
-            month_revenue = 0.0
+        # raw_revenue = _get_scalar(
+        #     conn,
+        #     "SELECT COALESCE(SUM(amount), 0) FROM payments "
+        #     "WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')"
+        # )
+        # try:
+        #     month_revenue = float(raw_revenue)
+        # except (ValueError, TypeError):
+        #     month_revenue = 0.0
 
         st.markdown(f"""
         <div class="sidebar-stat">👦 عدد الطلاب <b>{students_count}</b></div>
-        <div class="sidebar-stat">💰 مقبوضات هذا الشهر <b>{H.format_money(month_revenue)}</b></div>
         """, unsafe_allow_html=True)
+
+        # <div class="sidebar-stat">💰 مقبوضات هذا الشهر <b>{H.format_money(month_revenue)}</b></div>
+
 
         st.markdown("<div class='nav-stack'>", unsafe_allow_html=True)
         for key, icon, label in NAV_ITEMS:
