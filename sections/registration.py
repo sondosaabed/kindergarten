@@ -43,7 +43,7 @@ def render(conn):
             class_label = c2.selectbox("الصف والشعبة *", list(class_options.keys()))
             year_label = c3.selectbox("السنة الدراسية *", years_df['year_id'])
             
-            # Input field for dynamic annual tuition fee
+            # Input field for dynamic annual tuition fee per registration
             annual_tuition = c4.number_input(
                 "الرسوم السنوية (شيكل) *", 
                 min_value=0.0, 
@@ -97,7 +97,7 @@ def render(conn):
         if regs.empty:
             ui.empty_state("لا توجد تسجيلات بعد.")
         else:
-            # Calculate remaining balance based on the individual registration's annual tuition
+            # Calculate dynamic balance per student
             regs["المبلغ المتبقي"] = (regs["الرسوم السنوية"].astype(float) - regs["paid_toward_tuition"].astype(float)).clip(lower=0)
 
             f1, f2 = st.columns(2)
