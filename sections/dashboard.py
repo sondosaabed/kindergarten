@@ -1,5 +1,6 @@
 """
-dashboard.py — Complete updated dashboard with accurate cash flow and supplier debt metrics.
+sections/dashboard.py — لوحة التحكم (الرئيسية)
+Organized into clear visual sections with subheadings for improved UI/UX.
 """
 
 import streamlit as st
@@ -30,25 +31,23 @@ def _get_scalar(conn, query, params=()):
 
 
 def render(conn):
-    ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة والمالية")
+    ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة والمالية والسيولة")
 
     current_month = datetime.now().strftime("%Y-%m")
 
-    # Fetch KPI metrics directly
+    # ------------------------------------------------------------------
+    # Data Queries
+    # ------------------------------------------------------------------
+    # 1. Operational Counts
     total_students = int(_get_scalar(conn, "SELECT COUNT(*) FROM students"))
     total_teachers = int(_get_scalar(conn, "SELECT COUNT(*) FROM teachers"))
     total_classes = int(_get_scalar(conn, "SELECT COUNT(*) FROM classes"))
-    total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
     pending = int(_get_scalar(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
-    # Expenses & Supplier Debts Breakdown
-    total_expenses_incurred = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM expenses"))
-    total_expenses_paid = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount_paid), 0) FROM expenses"))
-    total_supplier_debts = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount - amount_paid), 0) FROM expenses"))
-    total_assets = float(_get_scalar(conn, "SELECT COALESCE(SUM(total_cost), 0) FROM assets"))
-
-    # Dynamically calculated total outstanding student tuition
-    total_outstanding_tuition = float(_get_scalar(conn, """
+    # 2. Revenue & Student Receivables
+    total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
+    
+    total_student_outstanding = float(_get_scalar(conn, """
         SELECT COALESCE(SUM(GREATEST(0, COALESCE(r.annual_tuition, 3500.0) - COALESCE(p.paid, 0))), 0)
         FROM registrations r
         LEFT JOIN (
@@ -60,7 +59,12 @@ def render(conn):
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """))
 
-    # Payroll & Monthly Cash Flow Indicators (Using Actual Cash Paid)
+    # 3. Expenses Breakdown & Capital Assets
+    total_expenses_paid = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount_paid), 0) FROM expenses"))
+    total_supplier_debts = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount - amount_paid), 0) FROM expenses"))
+    total_assets = float(_get_scalar(conn, "SELECT COALESCE(SUM(total_cost), 0) FROM assets"))
+
+    # 4. Monthly Cash Flow Health Indicators
     monthly_salaries_due = float(_get_scalar(conn, "SELECT COALESCE(SUM(salary), 0) FROM teachers"))
     
     monthly_student_income = float(_get_scalar(conn, """
@@ -75,50 +79,51 @@ def render(conn):
         WHERE salary_month = %s
     """, (current_month,)))
 
-    # Monthly Cash Outflow uses amount_paid!
-    monthly_op_expenses_paid = float(_get_scalar(conn, """
+    monthly_expenses_paid = float(_get_scalar(conn, """
         SELECT COALESCE(SUM(amount_paid), 0) 
         FROM expenses 
         WHERE TO_CHAR(expense_date::date, 'YYYY-MM') = %s
     """, (current_month,)))
 
-    # Total Monthly Cash Outflow = Paid Salaries + Paid Operational Expenses
-    total_monthly_cash_outflow = monthly_salaries_paid + monthly_op_expenses_paid
+    total_monthly_cash_outflow = monthly_salaries_paid + monthly_expenses_paid
 
-    # ------------------------------------------------------------------
-    # KPI Grid Row 1: Key Operational Counts
-    # ------------------------------------------------------------------
-    r1_col1, r1_col2, r1_col3 = st.columns(3)
-    ui.kpi(r1_col1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
-    ui.kpi(r1_col2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
-    ui.kpi(r1_col3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
+    # ==================================================================
+    # SECTION 1: ENTITIES & OPERATIONAL COUNTS
+    # ==================================================================
+    st.markdown("##### 👥 أعداد المنظومة التشغيلية")
+    c1, c2, c3, c4 = st.columns(4)
+    ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
+    ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
+    ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
+    ui.kpi(c4, "⏳", "طلبات بانتظار التحديد", pending, bg="#FEF3C7", fg="#D97706")
 
-    st.write("")
+    st.markdown("---")
 
-    # ------------------------------------------------------------------
-    # KPI Grid Row 2: Student Revenue & Receivables
-    # ------------------------------------------------------------------
-    r2_col1, r2_col2, r2_col3 = st.columns(3)
-    ui.kpi(r2_col1, "💰", "إجمالي مقبوضات الطلاب", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
-    ui.kpi(r2_col2, "🧾", "ديون الطلاب المتبقية (أقساط)", H.format_money(total_outstanding_tuition), bg="#FFE4E6", fg="#E11D48")
-    ui.kpi(r2_col3, "⏳", "طلبات بانتظار التحديد", pending, bg="#FEF3C7", fg="#D97706")
+    # ==================================================================
+    # SECTION 2: REVENUE & STUDENT RECEIVABLES
+    # ==================================================================
+    st.markdown("##### 💰 المقبوضات والديون المتبقية (الطلاب)")
+    r1, r2 = st.columns(2)
+    ui.kpi(r1, "💵", "إجمالي مقبوضات الطلاب", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
+    ui.kpi(r2, "🧾", "ديون الطلاب المتبقية (أقساط)", H.format_money(total_student_outstanding), bg="#FFE4E6", fg="#E11D48")
 
-    st.write("")
+    st.markdown("---")
 
-    # ------------------------------------------------------------------
-    # KPI Grid Row 3: Expenses, Supplier Debts & Capital Assets
-    # ------------------------------------------------------------------
-    r3_col1, r3_col2, r3_col3 = st.columns(3)
-    ui.kpi(r3_col1, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
-    ui.kpi(r3_col2, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FEF2F2", fg="#991B1B")
-    ui.kpi(r3_col3, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
+    # ==================================================================
+    # SECTION 3: EXPENDITURES, LIABILITIES & ASSETS
+    # ==================================================================
+    st.markdown("##### 💸 المصروفات والأصول والالتزامات")
+    e1, e2, e3 = st.columns(3)
+    ui.kpi(e1, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
+    ui.kpi(e2, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FFFBEB", fg="#B45309")
+    ui.kpi(e3, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
 
-    st.write("")
+    st.markdown("---")
 
-    # ------------------------------------------------------------------
-    # KPI Grid Row 4: Monthly Cash Flow Health Check
-    # ------------------------------------------------------------------
-    st.markdown(f"##### 🗓️ الميزانية التشغيلية لشهر ({current_month})")
+    # ==================================================================
+    # SECTION 4: MONTHLY CASH FLOW HEALTH CHECK
+    # ==================================================================
+    st.markdown(f"##### 🗓️ الميزانية والسيولة التشغيلية لشهر ({current_month})")
     p1, p2, p3 = st.columns(3)
     ui.kpi(p1, "💵", "مقبوضات الطلاب (هذا الشهر)", H.format_money(monthly_student_income), bg="#E0F2FE", fg="#0369A1")
     ui.kpi(p2, "📦", "السيولة الخارجة (رواتب + مصروفات)", H.format_money(total_monthly_cash_outflow), bg="#FEF2F2", fg="#991B1B")
@@ -130,7 +135,7 @@ def render(conn):
     if net_monthly_margin < 0:
         st.error(
             f"⚠️ **تنبيه سيولة مالية:** تحصيلات الطلاب لهذا الشهر ({H.format_money(monthly_student_income)} شيكل) "
-            f"**أقل من** السيولة الخارجة فعلياً ({H.format_money(total_monthly_cash_outflow)} شيكل) "
+            f"**أقل من** السيولة الخارجة للرواتب والمصروفات ({H.format_money(total_monthly_cash_outflow)} شيكل) "
             f"بعجز قدره: **{H.format_money(abs(net_monthly_margin))} شيكل**."
         )
     else:
@@ -139,11 +144,11 @@ def render(conn):
             f"بفائض تشغيلي قدره **{H.format_money(net_monthly_margin)} شيكل**."
         )
 
-    st.write("")
+    st.markdown("---")
 
-    # ------------------------------------------------------------------
-    # Operational Charts Section
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # SECTION 5: CHARTS AND VISUAL ANALYTICS
+    # ==================================================================
     left, right = st.columns([1.3, 1])
 
     with left:
@@ -201,16 +206,14 @@ def render(conn):
                 )
                 st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
 
-    # ------------------------------------------------------------------
-    # Expense Breakdown & Assets Distribution Charts
-    # ------------------------------------------------------------------
+    # Breakdown Charts
     exp_col, ast_col = st.columns(2)
 
     with exp_col:
         with st.container(border=True):
-            st.markdown("##### 💸 توزيع المصروفات (حسب الفئة)")
+            st.markdown("##### 💸 المصروفات المدفوعة حسب الفئة")
             exp_chart_df = ui.df(conn, """
-                SELECT category AS "الفئة", SUM(amount) AS "الإجمالي"
+                SELECT category AS "الفئة", SUM(amount_paid) AS "الإجمالي"
                 FROM expenses
                 GROUP BY category
                 ORDER BY "الإجمالي" DESC
@@ -266,9 +269,9 @@ def render(conn):
                 )
                 st.plotly_chart(fig_ast, use_container_width=True, config={"displayModeBar": False})
 
-    # ------------------------------------------------------------------
-    # Recent Activity Table
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # SECTION 6: RECENT ACTIVITY
+    # ==================================================================
     with st.container(border=True):
         st.markdown("##### 🕓 آخر عمليات التسجيل")
         recent = ui.df(conn, """
