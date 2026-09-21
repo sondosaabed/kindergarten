@@ -91,11 +91,12 @@ def render(conn):
     # SECTION 1: ENTITIES & OPERATIONAL COUNTS
     # ==================================================================
     st.markdown("##### 👥 الأعداد  ")
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
     ui.kpi(c2, "👩‍🏫", "المعلمات", total_teachers, bg="#F0F9FF", fg="#0284C7")
     ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
     ui.kpi(c4, "⏳", "طلبات بانتظار التحديد", pending, bg="#FEF3C7", fg="#D97706")
+    ui.kpi(c5, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
 
     st.markdown("---")
 
@@ -112,12 +113,11 @@ def render(conn):
     # ==================================================================
     # SECTION 3: EXPENDITURES, LIABILITIES & ASSETS
     # ==================================================================
-    st.markdown("##### 💸 المصروفات والأصول والالتزامات")
-    e1, e2, e3, e4 = st.columns(4)
+    st.markdown("##### 💸 الاتزامات")
+    e1, e2, e3 = st.columns(3)
     ui.kpi(e1, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
     ui.kpi(e2, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FFFBEB", fg="#B45309")
-    ui.kpi(e3, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
-    ui.kpi(e4, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
+    ui.kpi(e3, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
 
     st.markdown("---")
 
