@@ -17,8 +17,10 @@ NAV_ITEMS = [
     ("years", "📅", "السنوات الدراسية"),
     ("registration", "📝", "التسجيل"),
     ("payments", "💵", "الدفعات المالية"),
+    (" رواتب المعلمات", "💸", "salaries"), 
     ("reports", "📈", "التقارير"),
 ]
+
 
 
 def _get_scalar(conn, query, params=()):
