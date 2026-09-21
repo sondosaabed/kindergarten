@@ -1,11 +1,9 @@
 """
-sidebar.py — the app's navigation rail.
-Uses direct cursor execution for scalar stats to avoid pandas type-casting errors.
+sidebar.py — Navigation rail with touch-optimized collapse handling.
 """
 
 import streamlit as st
 import ui
-import helpers as H
 import auth
 
 NAV_ITEMS = [
@@ -17,13 +15,12 @@ NAV_ITEMS = [
     ("years", "📅", "السنوات الدراسية"),
     ("registration", "📝", "التسجيل"),
     ("payments", "💵", "الدفعات المالية"),
-    ( "salaries", "💸", "رواتب المعلمات"), 
+    ("salaries", "💸", "رواتب المعلمات"), 
     ("reports", "📈", "التقارير"),
 ]
 
 
 def _get_scalar(conn, query, params=()):
-    """Executes a scalar query directly using a DB cursor safely."""
     try:
         cur = conn.cursor()
         cur.execute(query, params)
@@ -43,44 +40,28 @@ def _get_scalar(conn, query, params=()):
 
 
 def render(conn):
-    """Renders the sidebar and returns the selected page key."""
-
     if "current_page" not in st.session_state:
         st.session_state.current_page = NAV_ITEMS[0][0]
 
     with st.sidebar:
-        ui.render_logo(width=200)
+        ui.render_logo(width=130)
 
         st.markdown("""
-        <div class="brand-box" style="border-top:none;">
-            <h2 style="font-size:18px;">روضة مؤسسة شباب البيرة</h2>
-            <p>Al-Bireh Youth Foundation Kindergarten</p>
+        <div class="brand-box">
+            <h2>روضة مؤسسة شباب البيرة</h2>
+            <p>نظام الإدارة والمالية</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # Fetch values using cursor direct fetch
         raw_students = _get_scalar(conn, "SELECT COUNT(*) FROM students")
         try:
             students_count = int(raw_students)
         except (ValueError, TypeError):
             students_count = 0
 
-        # raw_revenue = _get_scalar(
-        #     conn,
-        #     "SELECT COALESCE(SUM(amount), 0) FROM payments "
-        #     "WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')"
-        # )
-        # try:
-        #     month_revenue = float(raw_revenue)
-        # except (ValueError, TypeError):
-        #     month_revenue = 0.0
-
         st.markdown(f"""
-        <div class="sidebar-stat">👦 عدد الطلاب <b>{students_count}</b></div>
+        <div class="sidebar-stat">👦 إجمالي الطلاب: <b>{students_count}</b></div>
         """, unsafe_allow_html=True)
-
-        # <div class="sidebar-stat">💰 مقبوضات هذا الشهر <b>{H.format_money(month_revenue)}</b></div>
-
 
         st.markdown("<div class='nav-stack'>", unsafe_allow_html=True)
         for key, icon, label in NAV_ITEMS:
@@ -95,11 +76,7 @@ def render(conn):
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown(
-            "<div style='opacity:.6; font-size:12px; margin-top:20px;'>صُنع بـ ❤️ لأجل روضتنا</div>",
-            unsafe_allow_html=True
-        )
-        st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
         if st.button("🚪 تسجيل الخروج", use_container_width=True, key="nav_logout"):
             auth.logout()
 
