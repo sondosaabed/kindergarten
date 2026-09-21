@@ -159,3 +159,31 @@ def render(conn):
                 fig_dist.update_traces(marker_color="#0284C7", marker_line_color="#0369A1", marker_line_width=1.5, textposition="outside")
                 fig_dist.update_layout(xaxis_title="", yaxis_title="", xaxis=dict(type='category'), yaxis=dict(dtick=1), margin=dict(l=10, r=10, t=25, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Cairo", size=12))
                 st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
+                
+    # ------------------------------------------------------------------
+    # Recent Activity Table
+    # ------------------------------------------------------------------
+    with st.container(border=True):
+        st.markdown("##### 🕓 آخر عمليات التسجيل")
+        recent = ui.df(conn, """
+            SELECT s.full_name AS "اسم الطالب", (c.class_type || ' ' || c.section) AS "الصف",
+                   r.year_id AS "السنة الدراسية", r.status AS "الحالة"
+            FROM registrations r
+            JOIN students s ON s.student_id = r.student_id
+            JOIN classes c ON c.class_id = r.class_id
+            ORDER BY r.registration_id DESC LIMIT 8
+        """)
+        if recent.empty:
+            ui.empty_state("لا توجد تسجيلات بعد.")
+        else:
+            st.dataframe(
+                recent,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "الحالة": st.column_config.TextColumn(
+                        "الحالة",
+                        help="حالة الطالب الحالية"
+                    )
+                }
+            )
