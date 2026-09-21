@@ -86,39 +86,68 @@ def compute_registration_status(conn, registration_id):
     has_reg_fee = (res["c"] > 0) if res else False
     return STATUS_ACTIVE if has_reg_fee else STATUS_NEW
 
-
 def refresh_registration_status(conn, registration_id):
-    new_status = compute_registration_status(conn, registration_id)
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE registrations SET status = %s WHERE registration_id = %s",
-        (new_status, registration_id)
-    )
-    conn.commit()
-    cur.close()
+    """Refreshes and updates registration status based on payments."""
+    paid = compute_paid_toward_tuition(conn, registration_id)
+    new_status = STATUS_ACTIVE if paid > 0 else STATUS_NEW
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE registrations 
+            SET status = %s 
+            WHERE registration_id = %s AND status != %s
+        """, (new_status, registration_id, STATUS_WITHDRAWN))
+        conn.commit()
+        cur.close()
+    except Exception:
+        conn.rollback()
+
     return new_status
 
 
 def compute_paid_toward_tuition(conn, registration_id):
-    """Sum of payments that count toward the yearly tuition (registration
-    fee + installments) — excludes 'آخر' (miscellaneous) payments."""
-    cur = conn.cursor()
-    placeholders = ",".join("%s" for _ in TUITION_PAYMENT_TYPES)
-    cur.execute(
-        f"SELECT COALESCE(SUM(amount),0) AS s FROM payments "
-        f"WHERE registration_id = %s AND payment_for IN ({placeholders})",
-        (registration_id, *TUITION_PAYMENT_TYPES)
-    )
-    res = cur.fetchone()
-    cur.close()
-    return float(res["s"]) if res else 0.0
+    """Computes total payments made toward registration or tuition fees for a registration ID."""
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COALESCE(SUM(amount), 0) AS total
+            FROM payments
+            WHERE registration_id = %s
+              AND payment_for IN ('رسوم تسجيل', 'أقساط تعليمية')
+        """, (registration_id,))
+        res = cur.fetchone()
+        cur.close()
+        if res is None:
+            return 0.0
+        val = res['total'] if isinstance(res, dict) else res[0]
+        return float(val) if val is not None else 0.0
+    except Exception:
+        return 0.0
 
 
 def compute_remaining_balance(conn, registration_id):
-    """How much of the ANNUAL_TUITION is still owed for this registration."""
+    """Computes the remaining tuition balance dynamically based on the registration's custom annual tuition."""
     paid = compute_paid_toward_tuition(conn, registration_id)
-    return max(ANNUAL_TUITION - paid, 0.0)
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COALESCE(annual_tuition, 3500.0) AS annual_tuition 
+            FROM registrations 
+            WHERE registration_id = %s
+        """, (registration_id,))
+        res = cur.fetchone()
+        cur.close()
+        
+        if res is None:
+            tuition = 3500.0
+        else:
+            tuition = float(res['annual_tuition'] if isinstance(res, dict) else res[0])
+    except Exception:
+        tuition = 3500.0
 
+    return max(0.0, tuition - paid)
 
 def format_money(amount):
     try:

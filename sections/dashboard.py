@@ -42,8 +42,9 @@ def render(conn):
     total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
     pending = int(_get_scalar(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
+    # Dynamically calculated total outstanding using per-registration annual_tuition
     total_outstanding = float(_get_scalar(conn, """
-        SELECT COALESCE(SUM(GREATEST(0, %s - COALESCE(p.paid, 0))), 0)
+        SELECT COALESCE(SUM(GREATEST(0, COALESCE(r.annual_tuition, 3500.0) - COALESCE(p.paid, 0))), 0)
         FROM registrations r
         LEFT JOIN (
             SELECT registration_id, SUM(amount) AS paid
@@ -52,7 +53,7 @@ def render(conn):
             GROUP BY registration_id
         ) p ON p.registration_id = r.registration_id
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
-    """, (H.ANNUAL_TUITION,)))
+    """))
 
     # ------------------------------------------------------------------
     # KPI Grid Row 1: Key Operational Counts

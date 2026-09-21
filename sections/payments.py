@@ -16,6 +16,20 @@ import helpers as H
 import receipt
 
 
+def _get_registration_tuition(conn, registration_id):
+    """Fetches tuition directly from registrations database record."""
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT COALESCE(annual_tuition, 3500.0) AS annual_tuition FROM registrations WHERE registration_id = %s", (registration_id,))
+        res = cur.fetchone()
+        cur.close()
+        if res is None:
+            return 3500.0
+        return float(res['annual_tuition'] if isinstance(res, dict) else res[0])
+    except Exception:
+        return 3500.0
+
+
 def render(conn):
     ui.section_header("💵", "الدفعات المالية", "تسجيل دفعة نقدية وطباعة وصل استلام")
 
@@ -44,10 +58,12 @@ def render(conn):
         selected_row = active_regs[active_regs['label'] == selected_label].iloc[0]
         reg_id_preview = int(selected_row['registration_id'])
 
+        reg_tuition = _get_registration_tuition(conn, reg_id_preview)
         paid_so_far = H.compute_paid_toward_tuition(conn, reg_id_preview)
         remaining_before = H.compute_remaining_balance(conn, reg_id_preview)
+
         i1, i2, i3 = st.columns(3)
-        i1.metric("الرسوم السنوية", f"{H.format_money(H.ANNUAL_TUITION)}")
+        i1.metric("الرسوم السنوية", f"{H.format_money(reg_tuition)}")
         i2.metric("المدفوع حتى الآن", f"{H.format_money(paid_so_far)}")
         i3.metric("المتبقي", f"{H.format_money(remaining_before)}")
 
