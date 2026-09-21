@@ -1,415 +1,256 @@
 """
-style.py — Central CSS for Streamlit App. Professional RTL layout with clean Cairo font everywhere.
-Fixed Header Alignments & Removed Form Instructions.
+style.py — Clean, Modern & Responsive CSS for Kindergarten Management System.
+Built from scratch with native RTL support, Cairo font, and robust form styling.
 """
 
 CSS = """
 <style>
-/* ---------------------------------------------------------------- */
-/* Google Fonts Import for Cairo Arabic Font                        */
-/* ---------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 1. Google Fonts Import (Cairo)                                             */
+/* -------------------------------------------------------------------------- */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-    /* Main Brand Colors (Fresh Emerald & Dark Slate) */
-    --primary: #10B981;
-    --primary-dark: #064E3B;
-    --primary-light: #D1FAE5;
-    
-    /* Modern Kindergarten Warm Palette */
-    --coral-pink: #F43F5E;
-    --amber-gold: #F59E0B;
-    --soft-sky: #3B82F6;
-    
-    /* Neutrals & Surfaces */
-    --bg: #FAFAF9;
+    --brand-primary: #10B981;
+    --brand-dark: #064E3B;
+    --brand-light: #ECFDF5;
+    --bg-main: #F8FAFC;
     --card-bg: #FFFFFF;
-    --card-border: #E7E5E4;
-    --text-main: #1C1917;
-    --text-muted: #78716C;
-    
-    /* Elevation Shadows */
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 12px -2px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+    --border-color: #E2E8F0;
+    --text-dark: #0F172A;
+    --text-muted: #64748B;
 }
 
-/* ---------------------------------------------------------------- */
-/* GLOBAL FONT OVERRIDE — FORCING 'Cairo' EVERYWHERE                */
-/* ---------------------------------------------------------------- */
-*, *::before, *::after,
-html, body, [class*="css"],
-p, span, div, a, li, blockquote,
-h1, h2, h3, h4, h5, h6, 
-label, input, textarea, select, button,
-div[data-baseweb="select"], 
-.stMarkdown, .stMarkdown p {
+/* -------------------------------------------------------------------------- */
+/* 2. Global Typography & Direction                                          */
+/* -------------------------------------------------------------------------- */
+html, body, [class*="css"], .stApp {
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    direction: rtl !important;
+    text-align: right !important;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+}
+
+*, *::before, *::after {
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Preserve Streamlit Native Material Icons */
-[data-testid="stIconMaterial"], 
-[class*="material-symbols"], 
-i[class*="icon"] {
-    font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
-}
-
-html, body, [class*="css"] {
-    direction: RTL;
-    text-align: right;
-    color: var(--text-main);
-    -webkit-tap-highlight-color: transparent;
-}
-
-.stApp {
-    background-color: var(--bg);
-}
-
-/* ---------------------------------------------------------------- */
-/* HEADINGS ALIGNMENT & HEADER FIXES                                */
-/* ---------------------------------------------------------------- */
-/* Completely Hide Streamlit Anchor Link Icons next to Titles */
+/* -------------------------------------------------------------------------- */
+/* 3. Streamlit Standard Headers & Title Realignment                          */
+/* -------------------------------------------------------------------------- */
+/* Hide anchor links (🔗) next to headers */
 div[data-testid="stHeadingWithHeadline"] a,
-.stMarkdown a.anchor-link,
-a[data-testid="stHeaderActionElements"] {
+a.anchor-link {
     display: none !important;
-    visibility: hidden !important;
 }
 
 div[data-testid="stHeadingWithHeadline"] {
-    direction: rtl !important;
-    text-align: center !important;
-    width: 100% !important;
+    text-align: right !important;
 }
 
 div[data-testid="stHeadingWithHeadline"] > h1,
 div[data-testid="stHeadingWithHeadline"] > h2,
 div[data-testid="stHeadingWithHeadline"] > h3,
-div[data-testid="stHeadingWithHeadline"] > h4,
-div[data-testid="stHeadingWithHeadline"] > h5,
-div[data-testid="stHeadingWithHeadline"] > h6 {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 8px !important;
-    font-family: 'Cairo', sans-serif !important;
+div[data-testid="stHeadingWithHeadline"] > h4 {
+    justify-content: flex-start !important;
+    text-align: right !important;
+    color: var(--brand-dark) !important;
     font-weight: 800 !important;
-    color: var(--primary-dark) !important;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    text-align: center !important;
-    width: 100% !important;
 }
 
-/* ---------------------------------------------------------------- */
-/* SECTION TITLES & SUBTITLES IN CAIRO                              */
-/* ---------------------------------------------------------------- */
 .section-title {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px;
-    font-size: 26px !important;
+    font-size: 22px !important;
     font-weight: 800 !important;
-    font-family: 'Cairo', sans-serif !important;
-    color: var(--primary-dark) !important;
+    color: var(--brand-dark) !important;
     margin-bottom: 4px !important;
-    text-align: center !important;
-    width: 100% !important;
+    text-align: right !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .section-sub {
+    font-size: 13px !important;
     color: var(--text-muted) !important;
     margin-bottom: 20px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    font-family: 'Cairo', sans-serif !important;
-    text-align: center !important;
-    width: 100% !important;
+    text-align: right !important;
 }
 
-/* ---------------------------------------------------------------- */
-/* TABS STYLING & MOBILE SCROLL                                     */
-/* ---------------------------------------------------------------- */
-div[data-testid="stTabs"] {
-    direction: rtl !important;
-}
-
-div[data-baseweb="tab-list"] {
-    gap: 6px;
-    background-color: transparent;
-    border-bottom: 2px solid var(--card-border);
-    justify-content: flex-start;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-}
-
-button[data-baseweb="tab"] {
-    height: 44px;
-    padding: 8px 16px;
-    border-radius: 10px 10px 0 0 !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
-    font-family: 'Cairo', sans-serif !important;
-    color: var(--text-muted) !important;
-    background-color: transparent !important;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-button[data-baseweb="tab"]:hover {
-    color: var(--primary) !important;
-    background-color: var(--primary-light) !important;
-}
-
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: var(--primary-dark) !important;
-    border-bottom: 3px solid var(--primary) !important;
-    background-color: #FFFFFF !important;
-}
-
-/* ---------------------------------------------------------------- */
-/* SIDEBAR STYLING & COLLAPSE FIX                                   */
-/* ---------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 4. Native & Clean Sidebar Styling                                         */
+/* -------------------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
-    direction: RTL;
-    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: #064E3B !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-section[data-testid="stSidebar"][data-collapsed="true"] {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-button[data-testid="stSidebarCollapseButton"],
-div[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 999999 !important;
-}
-
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] .stMarkdown {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-family: 'Cairo', sans-serif !important;
+section[data-testid="stSidebar"] * {
+    color: #FFFFFF !important;
 }
 
 .brand-box {
-    text-align: center;
-    padding: 10px 8px 16px 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    margin-bottom: 14px;
+    text-align: center !important;
+    padding: 10px 0 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 16px;
 }
 
 .brand-box h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 800;
-    color: #FFFFFF !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    margin: 0 !important;
 }
 
 .brand-box p {
-    margin: 2px 0 0 0;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7) !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-size: 12px !important;
+    opacity: 0.8;
+    margin: 2px 0 0 0 !important;
 }
 
 .sidebar-stat {
-    background: rgba(255, 255, 255, 0.07) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 12px !important;
-    padding: 8px 12px !important;
-    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
     font-size: 13px !important;
-    color: #FFFFFF !important;
-    font-family: 'Cairo', sans-serif !important;
+    margin-bottom: 12px !important;
 }
 
 .sidebar-stat b {
-    font-size: 16px;
-    display: block;
-    color: var(--primary-light) !important;
+    color: #A7F3D0 !important;
+    font-size: 16px !important;
 }
 
+/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton > button {
     background: rgba(255, 255, 255, 0.08) !important;
-    color: #E2E8F0 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     text-align: right !important;
     justify-content: flex-start !important;
-    padding: 10px 14px !important;
+    padding: 8px 14px !important;
     font-weight: 700 !important;
     font-size: 14px !important;
-    height: 46px !important;
+    min-height: 42px !important;
     width: 100% !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
-    color: #FFFFFF !important;
+    background: #10B981 !important;
     border: none !important;
     font-weight: 800 !important;
 }
 
-/* ---------------------------------------------------------------- */
-/* KPI CARDS SYSTEM                                                 */
-/* ---------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 5. Modern Cards & KPI Layout                                              */
+/* -------------------------------------------------------------------------- */
 .kpi-card {
     background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 14px;
-    padding: 12px 14px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--card-border);
+    padding: 14px 16px;
     display: flex !important;
     flex-direction: row-reverse !important;
-    align-items: center !important;
+    align-items: center !alignment;
     justify-content: space-between !important;
-    gap: 10px !important;
-    min-height: 80px;
-    height: 100%;
-    box-sizing: border-box;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .kpi-content {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
     text-align: right;
     flex: 1;
-    min-width: 0;
 }
 
 .kpi-value {
     font-size: 18px !important;
     font-weight: 800 !important;
-    color: var(--text-main);
-    line-height: 1.2;
-    font-family: 'Cairo', sans-serif !important;
+    color: var(--text-dark);
 }
 
 .kpi-label {
     font-size: 12px !important;
-    font-weight: 600 !important;
     color: var(--text-muted);
-    margin-top: 2px;
-    line-height: 1.3;
 }
 
 .kpi-icon {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
+    width: 42px;
+    height: 42px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    flex-shrink: 0 !important;
-    background: var(--primary-light);
-    color: var(--primary-dark);
+    background: var(--brand-light);
+    color: var(--brand-dark);
 }
 
-/* ---------------------------------------------------------------- */
-/* FORMS & HIDE FORM INSTRUCTIONS ("Press Enter to submit form")   */
-/* ---------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 6. Form Styling & Complete Removal of "Press Enter" Tooltips               */
+/* -------------------------------------------------------------------------- */
 div[data-testid="stForm"] {
-    background: #FFFFFF !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 16px !important;
-    padding: 20px 16px !important;
-    border: 1px solid #E2E8F0 !important;
+    padding: 24px 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03) !important;
 }
 
-div[data-testid="stForm"] div[data-baseweb="input"] {
+div[data-baseweb="input"] {
     border-radius: 10px !important;
-    background-color: #F8FAFC !important;
-    border: 1px solid #CBD5E1 !important;
+}
+
+/* Comprehensive suppression of Streamlit input helper overlays */
+div[data-testid="stInputInstruction"],
+div[data-testid="InputInstructions"],
+div[data-aria-hidden="true"],
+.st-emotion-cache-1y4p8pa,
+.st-emotion-cache-12w0q1f,
+small {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    opacity: 0 !important;
+}
+
+/* Buttons */
+.stButton > button {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
     min-height: 44px !important;
 }
 
-/* Strictly Hide Streamlit's "Press Enter to submit form" Caption Across Browsers */
-div[data-testid="stForm"] [data-aria-hidden="true"],
-div[data-testid="stForm"] small,
-div[data-testid="InputInstructions"],
-div[data-testid="stInputInstruction"],
-.st-emotion-cache-12w0q1f,
-.st-emotion-cache-1y4p8pa,
-div[data-testid="stForm"] span:has-text("Press Enter"),
-div[data-testid="stForm"] div:has-text("Press Enter") {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.stButton > button {
-    border-radius: 10px;
-    font-weight: 700;
-    font-family: 'Cairo', sans-serif !important;
-    min-height: 46px !important;
-}
-
 .stButton > button[kind="primary"] {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #FFFFFF;
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #FFFFFF !important;
 }
 
-/* ---------------------------------------------------------------- */
-/* MOBILE RESPONSIVENESS                                            */
-/* ---------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 7. Mobile Layout Tuning                                                    */
+/* -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
     .block-container {
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 2rem !important;
+        padding: 1rem 0.75rem !important;
     }
 
     div[data-testid="column"] {
         width: 100% !important;
         flex: 1 1 100% !important;
-        min-width: 100% !important;
         margin-bottom: 8px !important;
     }
 
-    .section-title { font-size: 20px !important; gap: 6px; }
-    .section-sub { font-size: 12px !important; margin-bottom: 12px !important; }
-
-    div[data-baseweb="select"] {
-        min-height: 46px !important;
-    }
-
-    .stButton > button {
-        width: 100% !important;
-        font-size: 15px !important;
-    }
+    .section-title { font-size: 18px !important; }
+    .section-sub { font-size: 12px !important; }
 }
 
-/* Hide Streamlit default UI overlays */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-div[data-testid="stDecoration"] {display: none;}
-div[data-testid="stToolbar"] {visibility: hidden;}
-div[data-testid="stStatusWidget"] {display: none !important;}
-.stDeployButton {display: none !important;}
+/* Hide Default Streamlit Overlays */
+#MainMenu, footer, header, div[data-testid="stToolbar"] {
+    visibility: hidden !important;
+}
 </style>
 """
