@@ -1,137 +1,148 @@
 """
-sections/teachers.py — المعلمون
-
-Add, view, edit and delete teaching staff records. Same reliability/UX
-pattern as parents.py: try/except + conn.rollback() around every write,
-(id, label) tuple pickers, edit form in an expander.
+sections/teachers.py — إدارة المعلمات وصرف الرواتب
 """
 
 import streamlit as st
-
 import ui
 import helpers as H
+import teacher_receipt
+from datetime import datetime
 
 
 def render(conn):
-    ui.section_header("👩‍🏫", "المعلمون", "بيانات الكادر التعليمي")
+    ui.section_header("👩‍🏫", "المعلمات والرواتب", "إدارة بيانات المعلمات وصرف الرواتب الشهرية")
 
-    tab_add, tab_view = st.tabs(["➕ إضافة معلم/ة", "📋 عرض / تعديل / حذف"])
+    tab_add, tab_view, tab_salary = st.tabs([
+        "➕ إضافة معلمة", 
+        "📋 قائمة المعلمات", 
+        "💵 صرف الرواتب وقسيمة الدفع"
+    ])
 
     # -------------------------------------------------- TAB 1: ADD TEACHER --
     with tab_add:
         with st.form("add_teacher_form", clear_on_submit=True):
-            c1, c2, c3 = st.columns(3)
+            c1, c2 = st.columns(2)
             national_id = c1.text_input("رقم الهوية *").strip()
             full_name = c2.text_input("الاسم الرباعي *").strip()
-            mobile = c3.text_input("رقم الجوال *").strip()
-            c4, c5, c6 = st.columns(3)
-            salary = c4.number_input("الراتب *", min_value=0.0, value=0.0, step=50.0)
-            hire_date = c5.date_input("تاريخ التعيين *")
-            experience = c6.number_input("سنوات الخبرة *", min_value=0, step=1)
-            c7, c8 = st.columns(2)
-            degree = c7.selectbox("المؤهل العلمي *", H.DEGREES)
-            specialization = c8.text_input("التخصص")
-            address = st.text_input("عنوان السكن *").strip()
 
-            submitted = st.form_submit_button("💾 حفظ بيانات المعلم/ة", type="primary", use_container_width=True)
+            c3, c4, c5 = st.columns(3)
+            salary = c3.number_input("الراتب الشهري (شيكل) *", min_value=0.0, value=2000.0, step=100.0)
+            mobile = c4.text_input("رقم الجوال").strip()
+            hire_date = c5.date_input("تاريخ التعيين")
+
+            address = st.text_input("العنوان السكني").strip()
+
+            submitted = st.form_submit_button("💾 حفظ المعلمة", type="primary", use_container_width=True)
 
             if submitted:
-                if not national_id or not full_name or not mobile or not address:
-                    st.warning("⚠️ يرجى تعبئة جميع الحقول الأساسية (*).")
+                if not national_id or not full_name:
+                    st.error("⚠️ يرجى إدخال رقم الهوية والاسم الرباعي.")
                 else:
-                    existing = ui.df(conn, "SELECT 1 FROM teachers WHERE national_id=%s", (national_id,))
-                    if not existing.empty:
-                        st.error("❌ رقم الهوية مسجل مسبقاً.")
-                    else:
-                        try:
-                            cur = conn.cursor()
-                            cur.execute('''
-                                INSERT INTO teachers (national_id, full_name, salary, mobile, address,
-                                    hire_date, experience_years, degree, specialization)
-                                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                            ''', (national_id, full_name, salary, mobile, address, str(hire_date),
-                                  experience, degree, specialization))
-                            conn.commit()
-                            cur.close()
-                            st.success(f"✅ تم إضافة المعلم/ة «{full_name}» بنجاح! 🎉")
-                            st.rerun()
-                        except Exception as e:
-                            conn.rollback()
-                            st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
+                    try:
+                        cur = conn.cursor()
+                        cur.execute("""
+                            INSERT INTO teachers (national_id, full_name, salary, mobile, address, hire_date)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, (national_id, full_name, salary, mobile, address, str(hire_date)))
+                        conn.commit()
+                        cur.close()
+                        st.success(f"✅ تم إضافة المعلمة ({full_name}) بنجاح!")
+                        st.rerun()
+                    except Exception as e:
+                        conn.rollback()
+                        st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
 
-    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
+    # -------------------------------------------------- TAB 2: VIEW TEACHERS --
     with tab_view:
-        teachers = ui.df(conn, "SELECT * FROM teachers ORDER BY full_name ASC")
+        teachers = ui.df(conn, "SELECT national_id, full_name, salary, mobile, address, hire_date FROM teachers ORDER BY full_name")
         if teachers.empty:
-            ui.empty_state("لا يوجد معلمون مسجلون بعد.")
+            ui.empty_state("لا توجد معلمات مسجلات بعد.")
         else:
             st.dataframe(teachers.rename(columns={
-                'national_id': 'رقم الهوية', 'full_name': 'الاسم', 'salary': 'الراتب',
-                'mobile': 'الجوال', 'hire_date': 'تاريخ التعيين', 'experience_years': 'سنوات الخبرة',
-                'degree': 'المؤهل', 'specialization': 'التخصص', 'address': 'العنوان'
+                'national_id': 'رقم الهوية',
+                'full_name': 'الاسم',
+                'salary': 'الراتب الشهري',
+                'mobile': 'الجوال',
+                'address': 'العنوان',
+                'hire_date': 'تاريخ التعيين'
             }), use_container_width=True, hide_index=True)
 
-            st.markdown("---")
-            st.markdown("##### ✏️ تعديل أو حذف معلم/ة")
+    # -------------------------------------------------- TAB 3: SALARY DISBURSEMENT --
+    with tab_salary:
+        teachers_df = ui.df(conn, "SELECT national_id, full_name, salary FROM teachers ORDER BY full_name")
+        
+        if teachers_df.empty:
+            ui.empty_state("يرجى إضافة معلمات أولاً لتتمكن من صرف الرواتب.")
+            return
 
-            teacher_options = [
-                (row['national_id'], f"{row['full_name']} — [هوية: {row['national_id']}]")
-                for _, row in teachers.iterrows()
-            ]
-            selected = st.selectbox(
-                "اختر المعلم/ة", options=teacher_options,
-                format_func=lambda x: x[1] if x else "اختر...",
-                index=None, placeholder="ابحث...", key="teacher_select_edit",
-            )
+        teacher_map = {f"{r.full_name} ({r.national_id})": (r.national_id, float(r.salary), r.full_name) for r in teachers_df.itertuples()}
+        
+        st.markdown("##### 📝 تسجيل دفعة راتب جديدة")
+        
+        selected_teacher_label = st.selectbox("اختر المعلمة *", list(teacher_map.keys()))
+        t_id, default_salary, t_name = teacher_map[selected_teacher_label]
 
-            if selected:
-                tid = selected[0]
-                row = teachers[teachers['national_id'] == tid].iloc[0]
+        current_month = datetime.now().strftime("%Y-%m")
 
-                with st.expander(f"⚙️ تعديل بيانات: {row['full_name']}", expanded=True):
-                    with st.form("edit_teacher_form"):
-                        c1, c2, c3 = st.columns(3)
-                        e_name = c1.text_input("الاسم", value=row['full_name'])
-                        e_salary = c2.number_input("الراتب", value=float(row['salary']))
-                        e_mobile = c3.text_input("الجوال", value=row['mobile'])
+        with st.form("disburse_salary_form"):
+            col1, col2, col3 = st.columns(3)
+            salary_month = col1.text_input("عن شهر (YYYY-MM) *", value=current_month)
+            base_salary = col2.number_input("الراتب الأساسي (شيكل)", min_value=0.0, value=default_salary, step=50.0)
+            bonus = col3.number_input("مكافأة / إضافي (شيكل)", min_value=0.0, value=0.0, step=50.0)
 
-                        c4, c5 = st.columns(2)
-                        e_address = c4.text_input("عنوان السكن", value=row['address'])
-                        e_specialization = c5.text_input("التخصص", value=row['specialization'] or "")
+            col4, col5 = st.columns(2)
+            deductions = col4.number_input("خصومات (شيكل)", min_value=0.0, value=0.0, step=50.0)
+            notes = col5.text_input("ملاحظات إضافية (اختياري)")
 
-                        b1, b2 = st.columns(2)
-                        save = b1.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
-                        delete = b2.form_submit_button("🗑️ حذف", use_container_width=True)
+            net_salary = max(0.0, base_salary + bonus - deductions)
+            st.info(f"💵 **صافي الراتب المستحق للصرف:** {H.format_money(net_salary)} شيكل")
 
-                        if save:
-                            try:
-                                cur = conn.cursor()
-                                cur.execute('''
-                                    UPDATE teachers SET full_name=%s, salary=%s, mobile=%s,
-                                        address=%s, specialization=%s
-                                    WHERE national_id=%s
-                                ''', (e_name, e_salary, e_mobile, e_address, e_specialization, tid))
-                                conn.commit()
-                                cur.close()
-                                st.success("✅ تم حفظ التعديلات.")
-                                st.rerun()
-                            except Exception as e:
-                                conn.rollback()
-                                st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
+            pay_submitted = st.form_submit_button("🧾 تسجيل الصرف وطباعة قسيمة الراتب", type="primary", use_container_width=True)
 
-                        if delete:
-                            linked_df = ui.df(conn, "SELECT COUNT(*) AS c FROM classes WHERE teacher_id=%s", (tid,))
-                            linked = linked_df.iloc[0]['c'] if not linked_df.empty else 0
-                            if linked > 0:
-                                st.error(f"⚠️ هذا المعلم/ة مسؤول عن {linked} صف. يرجى إعادة تعيين الصف أولاً.")
-                            else:
-                                try:
-                                    cur = conn.cursor()
-                                    cur.execute("DELETE FROM teachers WHERE national_id=%s", (tid,))
-                                    conn.commit()
-                                    cur.close()
-                                    st.warning("🗑️ تم حذف المعلم/ة بنجاح!")
-                                    st.rerun()
-                                except Exception as e:
-                                    conn.rollback()
-                                    st.error(f"❌ حدث خطأ أثناء الحذف: {e}")
+        if pay_submitted:
+            today = H.today_str()
+            try:
+                cur = conn.cursor()
+                cur.execute("""
+                    INSERT INTO teacher_payments (national_id, amount, payment_date, salary_month, base_salary, bonus, deductions, notes)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING payment_id
+                """, (t_id, net_salary, today, salary_month, base_salary, bonus, deductions, notes))
+                payment_id = cur.fetchone()['payment_id']
+                conn.commit()
+                cur.close()
+
+                st.success(f"✅ تم تسجيل صرف الراتب بنجاح! رقم القسيمة: #{payment_id}")
+
+                teacher_receipt.render_salary_slip(
+                    payment_id=payment_id,
+                    teacher_name=t_name,
+                    national_id=t_id,
+                    payment_date=today,
+                    salary_month=salary_month,
+                    base_salary=base_salary,
+                    bonus=bonus,
+                    deductions=deductions,
+                    net_amount=net_salary,
+                    notes=notes
+                )
+            except Exception as e:
+                conn.rollback()
+                st.error(f"❌ حدث خطأ أثناء تسديد الراتب: {e}")
+
+        st.markdown("---")
+        st.markdown("##### 📋 سجل رواتب المعلمات المدفوعة")
+        
+        salary_logs = ui.df(conn, """
+            SELECT tp.payment_id AS "رقم القسيمة", t.full_name AS "المعلمة",
+                   tp.salary_month AS "عن شهر", tp.amount AS "الصافي المدفوع",
+                   tp.payment_date AS "تاريخ الصرف", tp.notes AS "ملاحظات"
+            FROM teacher_payments tp
+            JOIN teachers t ON t.national_id = tp.national_id
+            ORDER BY tp.payment_id DESC
+        """)
+
+        if salary_logs.empty:
+            ui.empty_state("لا توجد رواتب مدفوعة مسجلة بعد.")
+        else:
+            st.dataframe(salary_logs, use_container_width=True, hide_index=True)
