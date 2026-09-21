@@ -10,12 +10,12 @@ CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-    /* Main Brand Colors (Fresh Emerald & Dark Slate) */
+    /* Main Brand Colors */
     --primary: #10B981;
     --primary-dark: #064E3B;
     --primary-light: #D1FAE5;
     
-    /* Modern Kindergarten Warm Palette */
+    /* Modern Palette */
     --coral-pink: #F43F5E;
     --amber-gold: #F59E0B;
     --soft-sky: #3B82F6;
@@ -46,7 +46,7 @@ div[data-baseweb="select"],
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Preserve Streamlit Native Material Icons */
+/* Preserve Streamlit Native Icons */
 [data-testid="stIconMaterial"], 
 [class*="material-symbols"], 
 i[class*="icon"] {
@@ -64,7 +64,7 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* STREAMLIT NATIVE HEADINGS FIX (Anchors & Titles Alignment)      */
+/* STREAMLIT HEADINGS FIX                                          */
 /* ---------------------------------------------------------------- */
 div[data-testid="stHeadingWithHeadline"] {
     direction: rtl !important;
@@ -89,7 +89,6 @@ div[data-testid="stHeadingWithHeadline"] > h6 {
     margin-bottom: 8px;
 }
 
-/* Hide or push Streamlit anchor link icon out of the way */
 div[data-testid="stHeadingWithHeadline"] a {
     order: 2 !important;
     opacity: 0.3;
@@ -101,7 +100,7 @@ div[data-testid="stHeadingWithHeadline"]:hover a {
 }
 
 /* ---------------------------------------------------------------- */
-/* SECTION TITLES & SUBTITLES IN CAIRO                              */
+/* SECTION TITLES & SUBTITLES                                       */
 /* ---------------------------------------------------------------- */
 .section-title {
     display: flex;
@@ -126,7 +125,7 @@ div[data-testid="stHeadingWithHeadline"]:hover a {
 }
 
 /* ---------------------------------------------------------------- */
-/* TABS STYLING FIXES                                               */
+/* TABS STYLING                                                    */
 /* ---------------------------------------------------------------- */
 div[data-testid="stTabs"] {
     direction: rtl !important;
@@ -163,53 +162,18 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* MODERN GLASSMORPHIC SIDEBAR STYLING & ULTIMATE COLLAPSE FIX     */
+/* RESET & CLEAN SIDEBAR STYLING                                    */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
     direction: RTL;
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-    transition: all 0.3s ease-in-out !important;
 }
 
-/* 1. Fully hide and collapse sidebar container off-screen in RTL mode */
-section[data-testid="stSidebar"][aria-expanded="false"],
-section[data-testid="stSidebar"][data-collapsed="true"],
-div[data-testid="stSidebarCollapsedControl"] + section[data-testid="stSidebar"] {
-    margin-right: -21rem !important;
-    width: 0px !important;
-    min-width: 0px !important;
-    max-width: 0px !important;
-    padding: 0px !important;
-    overflow: hidden !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-}
-
-/* 2. Hide all nested DOM nodes when sidebar is collapsed */
-section[data-testid="stSidebar"][aria-expanded="false"] *,
-section[data-testid="stSidebar"][data-collapsed="true"] * {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0px !important;
-    width: 0px !important;
-    max-height: 0px !important;
-    overflow: hidden !important;
-}
-
-/* 3. Keep the expand toggle button cleanly visible */
-button[data-testid="stSidebarCollapseButton"],
-div[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"],
-[data-testid="collapsedControl"] *,
-button[aria-label="Expand sidebar"],
-button[aria-label="Collapse sidebar"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 999999 !important;
-    position: relative !important;
+/* Ensure controls and buttons in header remain clickable */
+header[data-testid="stHeader"] {
+    background-color: transparent !important;
+    z-index: 99999 !important;
 }
 
 /* Sidebar Text Color Fixes */
@@ -247,33 +211,12 @@ section[data-testid="stSidebar"] .stMarkdown {
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Sidebar Top Cards & Metrics */
-.sidebar-stat,
-section[data-testid="stSidebar"] [data-testid="stMetric"] {
-    background: rgba(255, 255, 255, 0.07) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 12px !important;
-    padding: 10px 14px !important;
-    margin-bottom: 10px !important;
-    font-size: 13px !important;
-    color: #FFFFFF !important;
-    backdrop-filter: blur(8px) !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-.sidebar-stat b {
-    font-size: 17px;
-    display: block;
-    color: var(--primary-light) !important;
-    font-family: 'Cairo', sans-serif !important;
-}
-
-/* Sidebar Navigation Buttons Container */
+/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton {
     margin-bottom: 6px !important;
 }
 
-/* Inactive Navigation Buttons (Translucent Glass Effect) */
+/* Inactive Buttons */
 section[data-testid="stSidebar"] .stButton > button,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: rgba(255, 255, 255, 0.08) !important;
@@ -297,20 +240,15 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Hover State for Inactive Buttons */
+/* Hover State */
 section[data-testid="stSidebar"] .stButton > button:hover,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     background: rgba(255, 255, 255, 0.18) !important;
     color: #FFFFFF !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
-    transform: translateX(-3px) !important;
 }
 
-section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
-    color: #FFFFFF !important;
-}
-
-/* Active Navigation Button (Highlight Gradient) */
+/* Active Navigation Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
     color: #FFFFFF !important;
@@ -325,7 +263,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     height: 44px !important;
     width: 100% !important;
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
-    transition: all 0.2s ease-in-out !important;
 }
 
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
@@ -333,18 +270,8 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
     font-family: 'Cairo', sans-serif !important;
 }
 
-section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-    transform: translateX(-3px) !important;
-}
-
-section[data-testid="stSidebar"] img {
-    max-width: 140px !important;
-    height: auto !important;
-}
-
 /* ---------------------------------------------------------------- */
-/* CONTAINERS, DATAFRAMES & FORM ELEMENTS                           */
+/* CONTAINERS, DATAFRAMES & CARDS                                   */
 /* ---------------------------------------------------------------- */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--card-bg);
@@ -361,9 +288,6 @@ div[data-testid="stDataFrame"] {
     border: 1px solid var(--card-border);
 }
 
-/* ---------------------------------------------------------------- */
-/* UPDATED KPI CARDS SYSTEM (Prevents Overlap and Clipping)         */
-/* ---------------------------------------------------------------- */
 .kpi-card {
     background: var(--card-bg);
     border-radius: 16px;
@@ -371,7 +295,7 @@ div[data-testid="stDataFrame"] {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--card-border);
     display: flex !important;
-    flex-direction: row-reverse !important; /* RTL placement: Icon right, Text left */
+    flex-direction: row-reverse !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 12px !important;
@@ -405,7 +329,6 @@ div[data-testid="stDataFrame"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
 }
 
 .kpi-label {
@@ -415,7 +338,6 @@ div[data-testid="stDataFrame"] {
     margin-top: 3px;
     line-height: 1.3;
     font-family: 'Cairo', sans-serif !important;
-    word-break: break-word;
 }
 
 .kpi-icon {
@@ -434,77 +356,14 @@ div[data-testid="stDataFrame"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* LOGIN FORM & INPUT FIELD STYLING                                 */
+/* FORMS & BUTTONS                                                  */
 /* ---------------------------------------------------------------- */
-.login-header {
-    text-align: center;
-    margin-top: 8px;
-    margin-bottom: 20px;
-}
-
-.login-header h2 {
-    font-size: 22px !important;
-    font-weight: 800 !important;
-    color: #064E3B !important;
-    margin: 0 0 2px 0 !important;
-    text-align: center !important;
-}
-
-.login-header .subtitle-en {
-    font-size: 13px !important;
-    color: #64748B !important;
-    direction: ltr !important;
-    margin: 0 0 12px 0 !important;
-    font-weight: 500 !important;
-    text-align: center !important;
-}
-
-.login-badge-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 6px;
-}
-
-.login-badge {
-    background-color: #ECFDF5;
-    color: #064E3B;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 4px 14px;
-    border-radius: 20px;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
 div[data-testid="stForm"] {
     background: #FFFFFF !important;
     border-radius: 20px !important;
     padding: 32px 28px !important;
     border: 1px solid #E2E8F0 !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
-}
-
-div[data-testid="stForm"] div[data-baseweb="input"] {
-    border-radius: 12px !important;
-    background-color: #F8FAFC !important;
-    border: 1px solid #CBD5E1 !important;
-    transition: all 0.2s ease-in-out;
-}
-
-div[data-testid="stForm"] div[data-baseweb="input"]:focus-within {
-    border-color: #10B981 !important;
-    background-color: #FFFFFF !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
-}
-
-/* Hide Streamlit form instructions ("Press Enter to submit form") */
-div[data-testid="stForm"] [data-aria-hidden="true"],
-div[data-testid="stForm"] small,
-div[data-testid="InputInstructions"] {
-    display: none !important;
-}
-
-div[data-testid="stForm"] input::placeholder {
-    opacity: 0.6 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
 }
 
 .stButton > button {
@@ -520,61 +379,14 @@ div[data-testid="stForm"] input::placeholder {
     color: #FFFFFF;
 }
 
-.stButton > button[kind="primary"]:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-}
-
-/* ---------------------------------------------------------------- */
-/* MOBILE RESPONSIVENESS                                            */
-/* ---------------------------------------------------------------- */
-@media (max-width: 768px) {
-    .block-container {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        padding-top: 1rem !important;
-    }
-
-    .section-title { font-size: 20px; gap: 8px; }
-    .section-sub { font-size: 13px; margin-bottom: 14px; }
-
-    .kpi-card {
-        padding: 12px 14px;
-        border-radius: 14px;
-        gap: 10px !important;
-    }
-    .kpi-icon { width: 40px !important; height: 40px !important; min-width: 40px !important; font-size: 18px; border-radius: 10px; }
-    .kpi-value { font-size: 17px !important; }
-    .kpi-label { font-size: 12px !important; }
-
-    .stButton > button {
-        width: 100%;
-        min-height: 44px;
-    }
-}
-
-/* Force Streamlit markdown containers and headings to align right */
-div[data-testid="stMarkdownContainer"],
-div[data-testid="stMarkdownContainer"] > div[data-testid="stHeadingWithHeadline"] {
+/* Force text alignment right */
+div[data-testid="stMarkdownContainer"] {
     text-align: right !important;
 }
 
-div[data-testid="stHeadingWithHeadline"] > h1,
-div[data-testid="stHeadingWithHeadline"] > h2,
-div[data-testid="stHeadingWithHeadline"] > h3,
-div[data-testid="stHeadingWithHeadline"] > h4,
-div[data-testid="stHeadingWithHeadline"] > h5,
-div[data-testid="stHeadingWithHeadline"] > h6 {
-    justify-content: flex-start !important;
-    text-align: right !important;
-    width: 100% !important;
-}
-
-/* Hide Streamlit default UI overlays & developer widgets */
+/* Hide default footer & toolbar while leaving header control available */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-header {visibility: hidden;}
 div[data-testid="stDecoration"] {display: none;}
 div[data-testid="stToolbar"] {visibility: hidden;}
 div[data-testid="stStatusWidget"] {display: none !important;}
@@ -583,7 +395,7 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 """
 
 
-# def apply_style():
-#     """Injects custom CSS styling into the Streamlit application."""
-#     import streamlit as st
-#     st.markdown(CSS, unsafe_allow_html=True)
+def apply_style():
+    """Injects custom CSS styling into the Streamlit application."""
+    import streamlit as st
+    st.markdown(CSS, unsafe_allow_html=True)
