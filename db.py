@@ -230,6 +230,31 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                expense_date TEXT NOT NULL,
+                category TEXT NOT NULL, -- e.g., 'قرطاسية', 'ضيافة', 'صيانة', 'كهرباء ومياه', 'أخرى'
+                amount REAL NOT NULL,
+                payment_method TEXT DEFAULT 'نقداً', -- 'نقداً', 'تحويل بنكي', 'شيك'
+                payee TEXT, -- الجهة المستلمة / المورد
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                purchase_date TEXT NOT NULL,
+                item_name TEXT NOT NULL,
+                category TEXT NOT NULL, -- e.g., 'ألعاب وتجهيزات', 'أثاث ومفروشات', 'أجهزة إلكترونية', 'مباني وتطوير'
+                quantity INTEGER DEFAULT 1,
+                unit_cost REAL NOT NULL,
+                total_cost REAL NOT NULL,
+                condition_status TEXT DEFAULT 'ممتازة', -- 'ممتازة', 'جيدة', 'تحتاج صيانة', 'تالفة'
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+ 
             -- Migration step to ensure existing database instances acquire the new column
             ALTER TABLE registrations 
             ADD COLUMN IF NOT EXISTS annual_tuition NUMERIC(10, 2) DEFAULT 3500.00;
