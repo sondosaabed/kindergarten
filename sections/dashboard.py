@@ -115,9 +115,9 @@ def render(conn):
     # ==================================================================
     st.markdown("##### 💸 الاتزامات")
     e1, e2, e3 = st.columns(3)
-    ui.kpi(e1, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
-    ui.kpi(e2, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FFFBEB", fg="#B45309")
-    ui.kpi(e3, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
+    ui.kpi(e1, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
+    ui.kpi(e2, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
+    ui.kpi(e3, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FFFBEB", fg="#B45309")
 
     st.markdown("---")
 
