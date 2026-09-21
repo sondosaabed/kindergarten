@@ -125,7 +125,7 @@ def render(conn):
     # SECTION 4: MONTHLY CASH FLOW HEALTH CHECK
     # ==================================================================
     st.markdown(f"##### 🗓️ الميزانية والسيولة التشغيلية لشهر ({current_month})")
-    p1, p2 = st.columns(3)
+    p1, p2 = st.columns(2)
     ui.kpi(p1, "💵", "مقبوضات الطلاب (هذا الشهر)", H.format_money(monthly_student_income), bg="#E0F2FE", fg="#0369A1")
     ui.kpi(p2, "📦", "السيولة الخارجة (رواتب + مصروفات)", H.format_money(total_monthly_cash_outflow), bg="#FEF2F2", fg="#991B1B")
 
