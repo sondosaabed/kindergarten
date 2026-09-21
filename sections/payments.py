@@ -3,10 +3,8 @@ sections/payments.py — الدفعات المالية
 
 Records a cash payment against a registration, updates the registration's
 status automatically, shows the remaining yearly balance, and offers a
-one-click printable receipt. Also supports correcting or removing a
-mistaken payment — following the same reliability/UX pattern as
-parents.py: try/except + conn.rollback() around every write, (id, label)
-tuple pickers, edit form in an expander.
+one-click printable receipt. Also supports editing, deleting, or re-printing
+any historical payment receipt.
 """
 
 import streamlit as st
@@ -47,7 +45,7 @@ def render(conn):
         ui.empty_state("لا يوجد طلاب مسجلون بعد. قم بتسجيل طالب أولاً من صفحة «التسجيل».")
         return
 
-    tab_add, tab_view = st.tabs(["➕ تسجيل دفعة كاش", "📋 سجل الدفعات"])
+    tab_add, tab_view = st.tabs(["➕ تسجيل دفعة كاش", "📋 سجل الدفعات والإعادة"])
 
     # -------------------------------------------------- TAB 1: ADD PAYMENT --
     with tab_add:
@@ -112,12 +110,13 @@ def render(conn):
                     reason_other=reason_other,
                 )
 
-    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
+    # ---------------------------------- TAB 2: VIEW / REPRINT / EDIT / DELETE --
     with tab_view:
         payments = ui.df(conn, """
             SELECT p.receipt_number AS "رقم الوصل", s.full_name AS "اسم الطالب",
                    p.amount AS "المبلغ", p.payment_date AS "التاريخ",
-                   p.payer_name AS "الدافع", p.payment_for AS "مقابل", p.registration_id
+                   p.payer_name AS "الدافع", p.payment_for AS "مقابل",
+                   p.payment_for_other AS "تفاصيل أخرى", p.registration_id
             FROM payments p
             JOIN registrations r ON p.registration_id = r.registration_id
             JOIN students s ON r.student_id = s.student_id
@@ -131,35 +130,55 @@ def render(conn):
             if search:
                 shown = shown[shown["اسم الطالب"].str.contains(search, na=False) |
                                shown["الدافع"].str.contains(search, na=False)]
-            st.dataframe(shown.drop(columns=["registration_id"]), use_container_width=True, hide_index=True)
+            
+            st.dataframe(shown.drop(columns=["registration_id", "تفاصيل أخرى"]), use_container_width=True, hide_index=True)
             st.metric("💰 مجموع الدفعات المعروضة", H.format_money(shown["المبلغ"].sum()))
 
             st.markdown("---")
-            st.markdown("##### ✏️ تعديل أو حذف دفعة (لتصحيح خطأ إدخال)")
+            st.markdown("##### ⚙️ إدارة الوصل المحدد (إعادة طباعة / تعديل / حذف)")
 
             pay_options = [
-                (int(row['رقم الوصل']), f"وصل #{int(row['رقم الوصل'])} — {row['اسم الطالب']} — {H.format_money(row['المبلغ'])}")
+                (int(row['رقم الوصل']), f"وصل #{int(row['رقم الوصل'])} — {row['اسم الطالب']} — {H.format_money(row['المبلغ'])} شيكل")
                 for _, row in payments.iterrows()
             ]
             selected = st.selectbox(
-                "اختر الدفعة", options=pay_options,
+                "اختر الوصل للطباعة أو التعديل", options=pay_options,
                 format_func=lambda x: x[1] if x else "اختر...",
-                index=None, placeholder="اختر...", key="payment_select_edit",
+                index=None, placeholder="اختر وصل استلام...", key="payment_select_edit",
             )
 
             if selected:
                 receipt_no = selected[0]
                 row = payments[payments['رقم الوصل'] == receipt_no].iloc[0]
+                reg_id_sel = int(row['registration_id'])
 
-                with st.expander(f"⚙️ تعديل: {selected[1]}", expanded=True):
+                # 🖨️ Reprint Option
+                if st.button("🖨️ إعادة عرض / طباعة الوصل المحدد", use_container_width=True):
+                    rem_bal = H.compute_remaining_balance(conn, reg_id_sel)
+                    receipt.render_receipt(
+                        receipt_id=receipt_no,
+                        date=str(row['التاريخ']),
+                        student_name=row['اسم الطالب'],
+                        payer=row['الدافع'],
+                        amount=H.format_money(row['المبلغ']),
+                        reason=row['مقابل'],
+                        remaining=H.format_money(rem_bal),
+                        reason_other=row['تفاصيل أخرى'] or "",
+                    )
+
+                # ✏️ Edit & Delete Expander
+                with st.expander(f"✏️ تعديل بيانات الوصل #{receipt_no}", expanded=False):
                     with st.form("edit_payment_form"):
                         c1, c2 = st.columns(2)
                         e_amount = c1.number_input("المبلغ", min_value=0.0, value=float(row['المبلغ']), step=10.0)
                         e_payer = c2.text_input("اسم الدافع", value=row['الدافع'])
-                        e_reason = st.selectbox(
+                        
+                        c3, c4 = st.columns(2)
+                        e_reason = c3.selectbox(
                             "مقابل", H.PAYMENT_FOR,
                             index=H.PAYMENT_FOR.index(row['مقابل']) if row['مقابل'] in H.PAYMENT_FOR else 0
                         )
+                        e_other = c4.text_input("تفاصيل أخرى", value=row['تفاصيل أخرى'] or "")
 
                         b1, b2 = st.columns(2)
                         save = b1.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
@@ -169,12 +188,12 @@ def render(conn):
                             try:
                                 cur = conn.cursor()
                                 cur.execute('''
-                                    UPDATE payments SET amount=%s, payer_name=%s, payment_for=%s
+                                    UPDATE payments SET amount=%s, payer_name=%s, payment_for=%s, payment_for_other=%s
                                     WHERE receipt_number=%s
-                                ''', (e_amount, e_payer, e_reason, receipt_no))
+                                ''', (e_amount, e_payer, e_reason, e_other, receipt_no))
                                 conn.commit()
                                 cur.close()
-                                H.refresh_registration_status(conn, int(row['registration_id']))
+                                H.refresh_registration_status(conn, reg_id_sel)
                                 st.success("✅ تم حفظ التعديلات.")
                                 st.rerun()
                             except Exception as e:
@@ -187,7 +206,7 @@ def render(conn):
                                 cur.execute("DELETE FROM payments WHERE receipt_number=%s", (receipt_no,))
                                 conn.commit()
                                 cur.close()
-                                H.refresh_registration_status(conn, int(row['registration_id']))
+                                H.refresh_registration_status(conn, reg_id_sel)
                                 st.warning("🗑️ تم حذف الدفعة بنجاح! تم تحديث حالة التسجيل والمبلغ المتبقي تلقائياً.")
                                 st.rerun()
                             except Exception as e:
