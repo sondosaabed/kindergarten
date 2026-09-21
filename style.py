@@ -171,17 +171,26 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Hide sidebar background/shadow when collapsed, but KEEP the expand button functional */
+/* Properly hide ALL inner content and force zero width when collapsed */
 section[data-testid="stSidebar"][data-collapsed="true"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    width: 0px !important;
+    min-width: 0px !important;
 }
 
-/* Force the collapse/expand toggle button to stay visible at all times */
+section[data-testid="stSidebar"][data-collapsed="true"] * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Ensure only the collapse/expand toggle button remains visible when collapsed */
 button[data-testid="stSidebarCollapseButton"],
 div[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"] {
+[data-testid="collapsedControl"],
+[data-testid="collapsedControl"] * {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
