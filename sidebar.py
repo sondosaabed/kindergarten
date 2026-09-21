@@ -63,7 +63,7 @@ def render(conn):
         <div class="sidebar-stat">👦 إجمالي الطلاب: <b>{students_count}</b></div>
         """, unsafe_allow_html=True)
 
-        # Render navigation buttons cleanly without raw HTML div wrappers
+        # Render navigation buttons directly without raw HTML div wrappers
         for key, icon, label in NAV_ITEMS:
             is_active = st.session_state.current_page == key
             if st.button(
