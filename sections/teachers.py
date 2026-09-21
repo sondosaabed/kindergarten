@@ -1,5 +1,5 @@
 """
-sections/teachers.py — إدارة المعلمات وصرف الرواتب
+sections/teachers.py — إدارة المعلمات وصرف وتعديل الرواتب
 """
 
 import streamlit as st
@@ -10,12 +10,12 @@ from datetime import datetime
 
 
 def render(conn):
-    ui.section_header("👩‍🏫", "المعلمات والرواتب", "إدارة بيانات المعلمات وصرف الرواتب الشهرية")
+    ui.section_header("👩‍🏫", "المعلمات والرواتب", "إدارة بيانات المعلمات وصرف وتعديل الرواتب الشهرية")
 
     tab_add, tab_view, tab_salary = st.tabs([
         "➕ إضافة معلمة", 
         "📋 قائمة المعلمات", 
-        "💵 صرف الرواتب وقسيمة الدفع"
+        "💵 صرف وتعديل الرواتب"
     ])
 
     # -------------------------------------------------- TAB 1: ADD TEACHER --
@@ -67,7 +67,7 @@ def render(conn):
                 'hire_date': 'تاريخ التعيين'
             }), use_container_width=True, hide_index=True)
 
-    # -------------------------------------------------- TAB 3: SALARY DISBURSEMENT --
+    # -------------------------------------------------- TAB 3: SALARY DISBURSEMENT & EDITING --
     with tab_salary:
         teachers_df = ui.df(conn, "SELECT national_id, full_name, salary FROM teachers ORDER BY full_name")
         
@@ -77,7 +77,7 @@ def render(conn):
 
         teacher_map = {f"{r.full_name} ({r.national_id})": (r.national_id, float(r.salary), r.full_name) for r in teachers_df.itertuples()}
         
-        st.markdown("##### 📝 تسجيل دفعة راتب جديدة")
+        st.markdown("##### 📝 تسديد دفعة راتب جديدة")
         
         selected_teacher_label = st.selectbox("اختر المعلمة *", list(teacher_map.keys()))
         t_id, default_salary, t_name = teacher_map[selected_teacher_label]
@@ -130,13 +130,16 @@ def render(conn):
                 conn.rollback()
                 st.error(f"❌ حدث خطأ أثناء تسديد الراتب: {e}")
 
+        # -------------------------------------------------- SALARY LOG & EDIT/DELETE --
         st.markdown("---")
         st.markdown("##### 📋 سجل رواتب المعلمات المدفوعة")
         
         salary_logs = ui.df(conn, """
-            SELECT tp.payment_id AS "رقم القسيمة", t.full_name AS "المعلمة",
-                   tp.salary_month AS "عن شهر", tp.amount AS "الصافي المدفوع",
-                   tp.payment_date AS "تاريخ الصرف", tp.notes AS "ملاحظات"
+            SELECT tp.payment_id, tp.national_id, t.full_name AS "المعلمة",
+                   tp.salary_month AS "عن شهر", tp.base_salary AS "الأساسي",
+                   tp.bonus AS "المكافأة", tp.deductions AS "الخصم",
+                   tp.amount AS "الصافي المدفوع", tp.payment_date AS "تاريخ الصرف",
+                   tp.notes AS "ملاحظات"
             FROM teacher_payments tp
             JOIN teachers t ON t.national_id = tp.national_id
             ORDER BY tp.payment_id DESC
@@ -145,4 +148,93 @@ def render(conn):
         if salary_logs.empty:
             ui.empty_state("لا توجد رواتب مدفوعة مسجلة بعد.")
         else:
-            st.dataframe(salary_logs, use_container_width=True, hide_index=True)
+            # Table View
+            display_df = salary_logs.drop(columns=['payment_id', 'national_id']).rename(columns={
+                'payment_id': 'رقم القسيمة'
+            })
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+            st.markdown("##### ⚙️ تعديل / حذف / إعادة طباعة قسيمة راتب")
+
+            sal_options = [
+                (
+                    int(row['payment_id']),
+                    f"قسيمة #{int(row['payment_id'])} — {row['المعلمة']} — شهر {row['عن شهر']} — صافي: {H.format_money(row['الصافي المدفوع'])}"
+                )
+                for _, row in salary_logs.iterrows()
+            ]
+
+            selected_sal = st.selectbox(
+                "اختر العملية للتعديل أو الطباعة",
+                options=sal_options,
+                format_func=lambda x: x[1] if x else "اختر...",
+                index=None,
+                placeholder="اختر قسيمة راتب...",
+                key="salary_select_edit"
+            )
+
+            if selected_sal:
+                p_id = selected_sal[0]
+                sal_row = salary_logs[salary_logs['payment_id'] == p_id].iloc[0]
+
+                # Reprint Option
+                if st.button("🖨️ إعادة عرض / طباعة القسيمة المحددة", use_container_width=True):
+                    teacher_receipt.render_salary_slip(
+                        payment_id=p_id,
+                        teacher_name=sal_row['المعلمة'],
+                        national_id=sal_row['national_id'],
+                        payment_date=str(sal_row['تاريخ الصرف']),
+                        salary_month=sal_row['عن شهر'],
+                        base_salary=float(sal_row['الأساسي']),
+                        bonus=float(sal_row['المكافأة']),
+                        deductions=float(sal_row['الخصم']),
+                        net_amount=float(sal_row['الصافي المدفوع']),
+                        notes=sal_row['ملاحظات'] or ""
+                    )
+
+                # Edit Form
+                with st.expander(f"✏️ تعديل بيانات القسيمة #{p_id}", expanded=True):
+                    with st.form("edit_salary_form"):
+                        ec1, ec2, ec3 = st.columns(3)
+                        e_month = ec1.text_input("عن شهر", value=sal_row['عن شهر'])
+                        e_base = ec2.number_input("الراتب الأساسي", min_value=0.0, value=float(sal_row['الأساسي']), step=50.0)
+                        e_bonus = ec3.number_input("المكافأة", min_value=0.0, value=float(sal_row['المكافأة']), step=50.0)
+
+                        ec4, ec5 = st.columns(2)
+                        e_deductions = ec4.number_input("الخصومات", min_value=0.0, value=float(sal_row['الخصم']), step=50.0)
+                        e_notes = ec5.text_input("ملاحظات", value=sal_row['ملاحظات'] or "")
+
+                        e_net = max(0.0, e_base + e_bonus - e_deductions)
+                        st.caption(f"💡 صافي الراتب الجديد بعد التعديل: **{H.format_money(e_net)} شيكل**")
+
+                        btn1, btn2 = st.columns(2)
+                        save_edit = btn1.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
+                        delete_sal = btn2.form_submit_button("🗑️ حذف قسيمة الراتب", use_container_width=True)
+
+                        if save_edit:
+                            try:
+                                cur = conn.cursor()
+                                cur.execute("""
+                                    UPDATE teacher_payments 
+                                    SET salary_month=%s, base_salary=%s, bonus=%s, deductions=%s, amount=%s, notes=%s
+                                    WHERE payment_id=%s
+                                """, (e_month, e_base, e_bonus, e_deductions, e_net, e_notes, p_id))
+                                conn.commit()
+                                cur.close()
+                                st.success("✅ تم حفظ التعديلات وإعادة حساب الراتب الصافي بنجاح!")
+                                st.rerun()
+                            except Exception as e:
+                                conn.rollback()
+                                st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
+
+                        if delete_sal:
+                            try:
+                                cur = conn.cursor()
+                                cur.execute("DELETE FROM teacher_payments WHERE payment_id=%s", (p_id,))
+                                conn.commit()
+                                cur.close()
+                                st.warning("🗑️ تم حذف عملية صرف الراتب بنجاح!")
+                                st.rerun()
+                            except Exception as e:
+                                conn.rollback()
+                                st.error(f"❌ حدث خطأ أثناء الحذف: {e}")
