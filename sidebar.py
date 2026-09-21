@@ -2,6 +2,8 @@
 sidebar.py — Navigation rail with touch-optimized collapse handling.
 """
 
+import io
+import pandas as pd
 import streamlit as st
 import ui
 import auth
@@ -77,6 +79,44 @@ def render(conn):
                 st.rerun()
 
         st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        # --- Excel Comprehensive Backup Button ---
+        try:
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                tables = {
+                    "الطلاب": "students",
+                    "أولياء الأمور": "parents",
+                    "المعلمات": "teachers",
+                    "التسجيل": "registrations",
+                    "الصفوف": "classes",
+                    "الدفعات المالية": "payments",
+                    "رواتب المعلمات": "teacher_payments",
+                    "المصروفات": "expenses",
+                    "الأصول": "assets",
+                    "السنوات الدراسية": "academic_years",
+                }
+                for sheet_name, table_name in tables.items():
+                    try:
+                        df = pd.read_sql(f"SELECT * FROM {table_name}", con=conn)
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    except Exception:
+                        continue
+            output.seek(0)
+            
+            st.download_button(
+                label="📥 تحميل نسخة Excel شاملة",
+                data=output,
+                file_name="kindergarten_full_backup.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                help="تحميل كافة جداول النظام في ملف إكسل واحد متعدد التبويبات"
+            )
+        except Exception:
+            pass
+
+        st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
         if st.button("🚪 تسجيل الخروج", use_container_width=True, key="nav_logout"):
             auth.logout()
 
