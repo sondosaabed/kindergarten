@@ -20,8 +20,57 @@ NAV_ITEMS = [
     ("salaries", "💸", "رواتب المعلمات"), 
     ("expenses", "📦", "المصروفات والأصول"), 
     ("reports", "📈", "التقارير"),
-    ("backup", "💾", "نسخ احتياطي شامل"),  
 ]
+
+
+# تعريف النافذة المنبثقة للنسخ الاحتياطي
+@st.dialog("💾 النسخ الاحتياطي الشامل لقاعدة البيانات")
+def backup_dialog(conn):
+    st.markdown(
+        "اضغط على الزر أدناه لتصدير كافة جداول النظام (الطلاب، المعلمات، الرسوم، المصروفات، وغيرها) في ملف Excel واحد مقسم إلى تبويبات."
+    )
+    
+    if st.button("🚀 البدء بتجهيز ملف الإكسل", type="primary", use_container_width=True):
+        try:
+            with st.spinner("جاري جلب البيانات من قاعدة البيانات..."):
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                    tables = {
+                        "الطلاب": "students",
+                        "أولياء الأمور": "parents",
+                        "المعلمات": "teachers",
+                        "التسجيل": "registrations",
+                        "الصفوف": "classes",
+                        "الدفعات المالية": "payments",
+                        "رواتب المعلمات": "teacher_payments",
+                        "المصروفات": "expenses",
+                        "الأصول": "assets",
+                        "السنوات الدراسية": "academic_years",
+                    }
+                    
+                    cur = conn.cursor()
+                    for sheet_name, table_name in tables.items():
+                        try:
+                            cur.execute(f"SELECT * FROM {table_name}")
+                            rows = cur.fetchall()
+                            df = pd.DataFrame(rows) if rows else pd.DataFrame()
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
+                        except Exception:
+                            continue
+                    cur.close()
+                    
+                output.seek(0)
+                
+            st.success("تم تجهيز الملف بنجاح!")
+            st.download_button(
+                label="📥 تحميل ملف Excel الآن",
+                data=output,
+                file_name="kindergarten_full_backup.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.error(f"حدث خطأ أثناء إنشاء النسخة الاحتياطية: {e}")
 
 
 def _get_scalar(conn, query, params=()):
@@ -70,66 +119,23 @@ def render(conn):
         # Render navigation buttons
         for key, icon, label in NAV_ITEMS:
             is_active = st.session_state.current_page == key
-            
-            # إذا كان الزر هو زر النسخ الاحتياطي
-            if key == "backup":
-                # عرض الزر بشكل متناسق مع القائمة
-                if st.button(
-                    f"{icon}  {label}",
-                    key=f"nav_{key}",
-                    use_container_width=True,
-                    type="secondary"
-                ):
-                    # توليد وتحميل ملف الـ Excel فور الضغط عليه دون تغيير الصفحة الحالية
-                    try:
-                        output = io.BytesIO()
-                        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                            tables = {
-                                "الطلاب": "students",
-                                "أولياء الأمور": "parents",
-                                "المعلمات": "teachers",
-                                "التسجيل": "registrations",
-                                "الصفوف": "classes",
-                                "الدفعات المالية": "payments",
-                                "رواتب المعلمات": "teacher_payments",
-                                "المصروفات": "expenses",
-                                "الأصول": "assets",
-                                "السنوات الدراسية": "academic_years",
-                            }
-                            cur = conn.cursor()
-                            for sheet_name, table_name in tables.items():
-                                try:
-                                    cur.execute(f"SELECT * FROM {table_name}")
-                                    rows = cur.fetchall()
-                                    df = pd.DataFrame(rows) if rows else pd.DataFrame()
-                                    df.to_excel(writer, sheet_name=sheet_name, index=False)
-                                except Exception:
-                                    continue
-                            cur.close()
-                        output.seek(0)
-                        
-                        # استخدام placeholder لتنزيل الملف برمجياً أو عرضه
-                        st.sidebar.download_button(
-                            label="📥 اضغط هنا لتأكيد التنزيل",
-                            data=output,
-                            file_name="kindergarten_full_backup.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                        )
-                    except Exception as e:
-                        st.sidebar.error(f"خطأ في النسخ الاحتياطي: {e}")
-            else:
-                # الأزرار الاعتيادية للتنقل بين الصفحات
-                if st.button(
-                    f"{icon}  {label}",
-                    key=f"nav_{key}",
-                    use_container_width=True,
-                    type="primary" if is_active else "secondary"
-                ):
-                    st.session_state.current_page = key
-                    st.rerun()
+            if st.button(
+                f"{icon}  {label}",
+                key=f"nav_{key}",
+                use_container_width=True,
+                type="primary" if is_active else "secondary"
+            ):
+                st.session_state.current_page = key
+                st.rerun()
 
         st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        # زر افتتاحي للنافذة المنبثقة في الشريط الجانبي
+        if st.button("💾 نسخ احتياطي شامل", use_container_width=True, key="nav_backup_dialog"):
+            backup_dialog(conn)
+
+        st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
         if st.button("🚪 تسجيل الخروج", use_container_width=True, key="nav_logout"):
             auth.logout()
 
