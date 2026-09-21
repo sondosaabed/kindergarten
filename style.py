@@ -583,7 +583,7 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 """
 
 
-def apply_style():
-    """Injects custom CSS styling into the Streamlit application."""
-    import streamlit as st
-    st.markdown(CSS, unsafe_allow_html=True)
+# def apply_style():
+#     """Injects custom CSS styling into the Streamlit application."""
+#     import streamlit as st
+#     st.markdown(CSS, unsafe_allow_html=True)
