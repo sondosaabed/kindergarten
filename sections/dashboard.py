@@ -90,10 +90,10 @@ def render(conn):
     # ==================================================================
     # SECTION 1: ENTITIES & OPERATIONAL COUNTS
     # ==================================================================
-    st.markdown("##### 👥 أعداد المنظومة التشغيلية")
+    st.markdown("##### 👥 الأعداد  ")
     c1, c2, c3, c4 = st.columns(4)
     ui.kpi(c1, "🎒", "إجمالي الطلاب", total_students, bg="#E9F5EC", fg="#219044")
-    ui.kpi(c2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
+    ui.kpi(c2, "👩‍🏫", "المعلمات", total_teachers, bg="#F0F9FF", fg="#0284C7")
     ui.kpi(c3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
     ui.kpi(c4, "⏳", "طلبات بانتظار التحديد", pending, bg="#FEF3C7", fg="#D97706")
 
