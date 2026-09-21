@@ -217,6 +217,19 @@ def init_db():
                 UNIQUE(student_id, year_id)
             );
 
+            CREATE TABLE IF NOT EXISTS teacher_payments (
+                payment_id SERIAL PRIMARY KEY,
+                national_id VARCHAR(20) REFERENCES teachers(national_id) ON DELETE CASCADE,
+                amount NUMERIC(10, 2) NOT NULL,
+                payment_date DATE DEFAULT CURRENT_DATE,
+                salary_month VARCHAR(7) NOT NULL, -- e.g., '2026-09'
+                base_salary NUMERIC(10, 2) DEFAULT 0.00,
+                bonus NUMERIC(10, 2) DEFAULT 0.00,
+                deductions NUMERIC(10, 2) DEFAULT 0.00,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             -- Migration step to ensure existing database instances acquire the new column
             ALTER TABLE registrations 
             ADD COLUMN IF NOT EXISTS annual_tuition NUMERIC(10, 2) DEFAULT 3500.00;
