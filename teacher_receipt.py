@@ -221,10 +221,10 @@ def render_salary_slip(payment_id, teacher_name, national_id, payment_date, sala
         national_id=national_id,
         payment_date=payment_date,
         salary_month=salary_month,
-        base_salary=ui.format_money(base_salary) if hasattr(ui, 'format_money') else f"{base_salary:,.2f}",
-        bonus=f"{bonus:,.2f}",
-        deductions=f"{deductions:,.2f}",
-        net_amount=f"{net_amount:,.2f}",
+        base_salary=f"{float(base_salary):,.2f}",
+        bonus=f"{float(bonus):,.2f}",
+        deductions=f"{float(deductions):,.2f}",
+        net_amount=f"{float(net_amount):,.2f}",
         notes_html=notes_html,
     )
     
