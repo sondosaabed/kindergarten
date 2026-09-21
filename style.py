@@ -162,7 +162,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* RESET & CLEAN SIDEBAR STYLING                                    */
+/* SIDEBAR STYLING (Margin Bug Cleaned)                             */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
@@ -170,13 +170,11 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Ensure controls and buttons in header remain clickable */
 header[data-testid="stHeader"] {
     background-color: transparent !important;
     z-index: 99999 !important;
 }
 
-/* Sidebar Text Color Fixes */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3,
@@ -211,12 +209,10 @@ section[data-testid="stSidebar"] .stMarkdown {
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Sidebar Navigation Buttons */
 section[data-testid="stSidebar"] .stButton {
     margin-bottom: 6px !important;
 }
 
-/* Inactive Buttons */
 section[data-testid="stSidebar"] .stButton > button,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
     background: rgba(255, 255, 255, 0.08) !important;
@@ -240,7 +236,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
     font-family: 'Cairo', sans-serif !important;
 }
 
-/* Hover State */
 section[data-testid="stSidebar"] .stButton > button:hover,
 section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     background: rgba(255, 255, 255, 0.18) !important;
@@ -248,7 +243,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Active Navigation Button */
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
     color: #FFFFFF !important;
@@ -356,14 +350,76 @@ div[data-testid="stDataFrame"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* FORMS & BUTTONS                                                  */
+/* ORIGINAL LOGIN FORM & INPUT FIELD STYLING (RESTORED)             */
 /* ---------------------------------------------------------------- */
+.login-header {
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.login-header h2 {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #064E3B !important;
+    margin: 0 0 2px 0 !important;
+    text-align: center !important;
+}
+
+.login-header .subtitle-en {
+    font-size: 13px !important;
+    color: #64748B !important;
+    direction: ltr !important;
+    margin: 0 0 12px 0 !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+}
+
+.login-badge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.login-badge {
+    background-color: #ECFDF5;
+    color: #064E3B;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
 div[data-testid="stForm"] {
     background: #FFFFFF !important;
     border-radius: 20px !important;
     padding: 32px 28px !important;
     border: 1px solid #E2E8F0 !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
+}
+
+div[data-testid="stForm"] div[data-baseweb="input"] {
+    border-radius: 12px !important;
+    background-color: #F8FAFC !important;
+    border: 1px solid #CBD5E1 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+div[data-testid="stForm"] div[data-baseweb="input"]:focus-within {
+    border-color: #10B981 !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+div[data-testid="stForm"] [data-aria-hidden="true"],
+div[data-testid="stForm"] small,
+div[data-testid="InputInstructions"] {
+    display: none !important;
+}
+
+div[data-testid="stForm"] input::placeholder {
+    opacity: 0.6 !important;
 }
 
 .stButton > button {
@@ -379,12 +435,18 @@ div[data-testid="stForm"] {
     color: #FFFFFF;
 }
 
+.stButton > button[kind="primary"]:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+}
+
 /* Force text alignment right */
 div[data-testid="stMarkdownContainer"] {
     text-align: right !important;
 }
 
-/* Hide default footer & toolbar while leaving header control available */
+/* Hide default UI elements while maintaining header controls */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 div[data-testid="stDecoration"] {display: none;}
