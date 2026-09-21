@@ -45,6 +45,9 @@ def render(conn):
             col_list, col_form = st.columns([1.8, 1])
 
             with col_form:
+                # --------------------------------------------------------------
+                # داخل نموذج إضافة مصروف جديد (Add Expense Form)
+                # --------------------------------------------------------------
                 st.markdown("##### ➕ تسجيل مصروف جديد")
                 with st.form("add_expense_form", clear_on_submit=True):
                     exp_date = st.date_input("تاريخ المصروف", value=date.today())
@@ -53,12 +56,20 @@ def render(conn):
                     
                     pay_status = st.selectbox("حالة الدفع", PAYMENT_STATUSES)
                     
+                    # تحكم ديناميكي بالمبلغ المدفوع بناءً على الحالة
                     if pay_status == "مدفوع بالكامل":
                         amount_paid = amount
                     elif pay_status == "آجل / دين (غير مدفوع)":
                         amount_paid = 0.0
                     else:  # مدفوع جزئياً
-                        amount_paid = st.number_input("المبلغ المدفوع فعلياً (شيكل)", min_value=0.0, max_value=float(amount) if amount > 0 else 0.0, step=10.0, format="%.2f")
+                        amount_paid = st.number_input(
+                            "المبلغ المدفوع فعلياً (شيكل)", 
+                            min_value=0.0, 
+                            max_value=float(amount) if amount > 0 else 0.0, 
+                            value=float(amount)/2 if amount > 0 else 0.0,
+                            step=10.0, 
+                            format="%.2f"
+                        )
 
                     payee = st.text_input("المستلم / المورد (اختياري)")
                     method = st.selectbox("طريقة الدفع", ["كاش", "تحويل بنكي", "شيك"])
@@ -67,14 +78,15 @@ def render(conn):
                     if st.form_submit_button("حفظ المصروف", type="primary", use_container_width=True):
                         if amount <= 0:
                             st.error("⚠️ يرجى إدخال مبلغ أكبر من صفر.")
-                        elif pay_status == "مدفوع بالكامل" and amount_paid != amount:
-                            amount_paid = amount
                         else:
+                            # ضمان حتمي لتطابق القيمة قبل الحفظ في قاعدة البيانات
+                            final_paid = amount if pay_status == "مدفوع بالكامل" else (0.0 if pay_status == "آجل / دين (غير مدفوع)" else amount_paid)
+                            
                             with conn.cursor() as cur:
                                 cur.execute("""
                                     INSERT INTO expenses (expense_date, category, amount, amount_paid, payment_status, payment_method, payee, notes)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                                """, (exp_date, category, amount, amount_paid, pay_status, method, payee, notes))
+                                """, (exp_date, category, amount, final_paid, pay_status, method, payee, notes))
                             st.success("✅ تم تسجيل المصروف بنجاح!")
                             st.rerun()
 
