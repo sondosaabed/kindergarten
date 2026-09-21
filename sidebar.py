@@ -63,7 +63,7 @@ def render(conn):
         <div class="sidebar-stat">👦 إجمالي الطلاب: <b>{students_count}</b></div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<div class='nav-stack'>", unsafe_allow_html=True)
+        # Render navigation buttons cleanly without raw HTML div wrappers
         for key, icon, label in NAV_ITEMS:
             is_active = st.session_state.current_page == key
             if st.button(
@@ -74,7 +74,6 @@ def render(conn):
             ):
                 st.session_state.current_page = key
                 st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
         if st.button("🚪 تسجيل الخروج", use_container_width=True, key="nav_logout"):
