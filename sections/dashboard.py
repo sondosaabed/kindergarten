@@ -41,6 +41,10 @@ def render(conn):
     total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
     pending = int(_get_scalar(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
+    # Expenses & Assets totals
+    total_expenses = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM expenses"))
+    total_assets = float(_get_scalar(conn, "SELECT COALESCE(SUM(total_cost), 0) FROM assets"))
+
     # Dynamically calculated total outstanding tuition
     total_outstanding = float(_get_scalar(conn, """
         SELECT COALESCE(SUM(GREATEST(0, COALESCE(r.annual_tuition, 3500.0) - COALESCE(p.paid, 0))), 0)
@@ -69,6 +73,15 @@ def render(conn):
         WHERE salary_month = %s
     """, (current_month,)))
 
+    monthly_op_expenses = float(_get_scalar(conn, """
+        SELECT COALESCE(SUM(amount), 0) 
+        FROM expenses 
+        WHERE TO_CHAR(expense_date::date, 'YYYY-MM') = %s
+    """, (current_month,)))
+
+    # Total Monthly Outflow = Paid Salaries + Operational Expenses
+    total_monthly_outflow = monthly_salaries_paid + monthly_op_expenses
+
     # ------------------------------------------------------------------
     # KPI Grid Row 1: Key Operational Counts
     # ------------------------------------------------------------------
@@ -80,7 +93,7 @@ def render(conn):
     st.write("")
 
     # ------------------------------------------------------------------
-    # KPI Grid Row 2: Financial Metrics & Pending Registrations
+    # KPI Grid Row 2: Revenue, Receivables & Pending Tasks
     # ------------------------------------------------------------------
     r2_col1, r2_col2, r2_col3 = st.columns(3)
     ui.kpi(r2_col1, "💰", "إجمالي المقبوضات (الكلي)", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
@@ -90,33 +103,43 @@ def render(conn):
     st.write("")
 
     # ------------------------------------------------------------------
-    # KPI Grid Row 3: Monthly Payroll & Cash Flow Health Check
+    # KPI Grid Row 3: Capital Expenditures & Assets Summary
+    # ------------------------------------------------------------------
+    r3_col1, r3_col2, r3_col3 = st.columns(3)
+    ui.kpi(r3_col1, "💸", "إجمالي المصروفات التشغيلية", H.format_money(total_expenses), bg="#FFF1F2", fg="#BE123C")
+    ui.kpi(r3_col2, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
+    ui.kpi(r3_col3, "📊", "صافي الفائض / العجز العام", H.format_money(total_revenue - (total_expenses + total_assets)), bg="#F8FAFC", fg="#334155")
+
+    st.write("")
+
+    # ------------------------------------------------------------------
+    # KPI Grid Row 4: Monthly Payroll & Cash Flow Health Check
     # ------------------------------------------------------------------
     st.markdown(f"##### 🗓️ الميزانية التشغيلية لشهر ({current_month})")
     p1, p2, p3 = st.columns(3)
     ui.kpi(p1, "💵", "مقبوضات الطلاب (هذا الشهر)", H.format_money(monthly_student_income), bg="#E0F2FE", fg="#0369A1")
-    ui.kpi(p2, "📋", "إجمالي استحقاق الرواتب (شهرياً)", H.format_money(monthly_salaries_due), bg="#FEF2F2", fg="#991B1B")
-    ui.kpi(p3, "✅", "الرواتب المدفوعة (هذا الشهر)", H.format_money(monthly_salaries_paid), bg="#F0FDF4", fg="#166534")
+    ui.kpi(p2, "📦", "مصروفات ورواتب الشهر المدفوعة", H.format_money(total_monthly_outflow), bg="#FEF2F2", fg="#991B1B")
+    ui.kpi(p3, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
 
-    # Income vs Salary Comparison Alert
-    net_monthly_margin = monthly_student_income - monthly_salaries_due
+    # Income vs Outflow Cash Flow Alert
+    net_monthly_margin = monthly_student_income - total_monthly_outflow
     st.write("")
-    if monthly_student_income < monthly_salaries_due:
+    if net_monthly_margin < 0:
         st.error(
             f"⚠️ **تنبيه سيولة مالية:** تحصيلات الطلاب لهذا الشهر ({H.format_money(monthly_student_income)} شيكل) "
-            f"**أقل من** إجمالي رواتب المعلمات المطلوبة ({H.format_money(monthly_salaries_due)} شيكل) "
-            f"بعدجز قدره: **{H.format_money(abs(net_monthly_margin))} شيكل**."
+            f"**أقل من** المصروفات والرواتب المدفوعة ({H.format_money(total_monthly_outflow)} شيكل) "
+            f"بعجز قدره: **{H.format_money(abs(net_monthly_margin))} شيكل**."
         )
     else:
         st.success(
-            f"✅ **السيولة المالية ممتازة:** دخل الطلاب لهذا الشهر يستوعب إجمالي الرواتب "
+            f"✅ **السيولة المالية ممتازة:** دخل الطلاب لهذا الشهر يُغطي الرواتب والمصروفات "
             f"بفائض تشغيلي قدره **{H.format_money(net_monthly_margin)} شيكل**."
         )
 
     st.write("")
 
     # ------------------------------------------------------------------
-    # Charts Section
+    # Operational Charts Section
     # ------------------------------------------------------------------
     left, right = st.columns([1.3, 1])
 
@@ -138,7 +161,14 @@ def render(conn):
                 
                 fig_rev = px.bar(rev_sorted, x="الشهر", y="المبلغ", text_auto=True, height=280)
                 fig_rev.update_traces(marker_color="#10B981", marker_line_color="#059669", marker_line_width=1.5, textposition="outside")
-                fig_rev.update_layout(xaxis_title="", yaxis_title="", xaxis=dict(type='category'), margin=dict(l=10, r=10, t=25, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Cairo", size=12))
+                fig_rev.update_layout(
+                    xaxis_title="", yaxis_title="", 
+                    xaxis=dict(type='category'), 
+                    margin=dict(l=10, r=10, t=25, b=10), 
+                    paper_bgcolor="rgba(0,0,0,0)", 
+                    plot_bgcolor="rgba(0,0,0,0)", 
+                    font=dict(family="Cairo", size=12)
+                )
                 st.plotly_chart(fig_rev, use_container_width=True, config={"displayModeBar": False})
 
     with right:
@@ -157,9 +187,82 @@ def render(conn):
                 dist["الصف"] = dist["الصف"].astype(str)
                 fig_dist = px.bar(dist, x="الصف", y="العدد", text_auto=True, height=280)
                 fig_dist.update_traces(marker_color="#0284C7", marker_line_color="#0369A1", marker_line_width=1.5, textposition="outside")
-                fig_dist.update_layout(xaxis_title="", yaxis_title="", xaxis=dict(type='category'), yaxis=dict(dtick=1), margin=dict(l=10, r=10, t=25, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Cairo", size=12))
+                fig_dist.update_layout(
+                    xaxis_title="", yaxis_title="", 
+                    xaxis=dict(type='category'), 
+                    yaxis=dict(dtick=1), 
+                    margin=dict(l=10, r=10, t=25, b=10), 
+                    paper_bgcolor="rgba(0,0,0,0)", 
+                    plot_bgcolor="rgba(0,0,0,0)", 
+                    font=dict(family="Cairo", size=12)
+                )
                 st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
-                
+
+    # ------------------------------------------------------------------
+    # Expense Breakdown & Assets Distribution Charts
+    # ------------------------------------------------------------------
+    exp_col, ast_col = st.columns(2)
+
+    with exp_col:
+        with st.container(border=True):
+            st.markdown("##### 💸 توزيع المصروفات حسب الفئة")
+            exp_chart_df = ui.df(conn, """
+                SELECT category AS "الفئة", SUM(amount) AS "الإجمالي"
+                FROM expenses
+                GROUP BY category
+                ORDER BY "الإجمالي" DESC
+            """)
+            if exp_chart_df.empty:
+                ui.empty_state("لا توجد مصروفات مسجلة بعد.")
+            else:
+                fig_exp = px.pie(
+                    exp_chart_df, 
+                    names="الفئة", 
+                    values="الإجمالي", 
+                    hole=0.4,
+                    height=280,
+                    color_discrete_sequence=px.colors.qualitative.Set3
+                )
+                fig_exp.update_traces(textinfo="percent+label")
+                fig_exp.update_layout(
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Cairo", size=12),
+                    showlegend=False
+                )
+                st.plotly_chart(fig_exp, use_container_width=True, config={"displayModeBar": False})
+
+    with ast_col:
+        with st.container(border=True):
+            st.markdown("##### 🧸 توزيع الأصول والتجهيزات")
+            ast_chart_df = ui.df(conn, """
+                SELECT category AS "الفئة", SUM(total_cost) AS "الإجمالي"
+                FROM assets
+                GROUP BY category
+                ORDER BY "الإجمالي" DESC
+            """)
+            if ast_chart_df.empty:
+                ui.empty_state("لا توجد أصول أو ألعاب مسجلة بعد.")
+            else:
+                fig_ast = px.pie(
+                    ast_chart_df, 
+                    names="الفئة", 
+                    values="الإجمالي", 
+                    hole=0.4,
+                    height=280,
+                    color_discrete_sequence=px.colors.qualitative.Pastel
+                )
+                fig_ast.update_traces(textinfo="percent+label")
+                fig_ast.update_layout(
+                    margin=dict(l=10, r=10, t=25, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Cairo", size=12),
+                    showlegend=False
+                )
+                st.plotly_chart(fig_ast, use_container_width=True, config={"displayModeBar": False})
+
     # ------------------------------------------------------------------
     # Recent Activity Table
     # ------------------------------------------------------------------
