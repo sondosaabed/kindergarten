@@ -1,5 +1,5 @@
 """
-ui.py — small shared UI building blocks used by every section module.
+ui.py — Shared mobile-safe UI building blocks.
 """
 
 import base64
@@ -10,11 +10,7 @@ import streamlit as st
 LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")
 
 
-# --------------------------------------------------------------------------
-# Data
-# --------------------------------------------------------------------------
 def df(conn, sql, params=()):
-    """Run a query against the shared connection and return a clean DataFrame."""
     try:
         cur = conn.cursor()
         cur.execute(sql, params)
@@ -24,7 +20,6 @@ def df(conn, sql, params=()):
             cur.close()
             return pd.DataFrame()
         
-        # Handle dict rows (RealDictCursor) or standard tuples
         if isinstance(rows[0], dict):
             data = rows
             cols = list(rows[0].keys())
@@ -39,9 +34,6 @@ def df(conn, sql, params=()):
         return pd.DataFrame()
 
 
-# --------------------------------------------------------------------------
-# Layout primitives
-# --------------------------------------------------------------------------
 def section_header(icon, title, subtitle=""):
     st.markdown(f"<div class='section-title'>{icon} {title}</div>", unsafe_allow_html=True)
     if subtitle:
@@ -49,7 +41,6 @@ def section_header(icon, title, subtitle=""):
 
 
 def kpi(col, icon, label, value, bg="#E9F5EC", fg="#219044"):
-    """Renders an updated, layout-safe KPI card into a Streamlit column."""
     with col:
         st.markdown(f"""
         <div class="kpi-card">
@@ -70,9 +61,6 @@ def confirm_delete(key, label="أوافق على الحذف نهائياً"):
     return st.checkbox(f"⚠️ {label}", key=key)
 
 
-# --------------------------------------------------------------------------
-# Logo rendering
-# --------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def _logo_base64():
     if not os.path.exists(LOGO_PATH):
@@ -81,15 +69,14 @@ def _logo_base64():
         return base64.b64encode(f.read()).decode()
 
 
-def render_logo(width=300, center=True, drop_shadow=True):
+def render_logo(width=140, center=True, drop_shadow=True):
     b64 = _logo_base64()
     if not b64:
         return
-    shadow = "filter: drop-shadow(0 3px 8px rgba(0,0,0,.18));" if drop_shadow else ""
+    shadow = "filter: drop-shadow(0 3px 6px rgba(0,0,0,.15));" if drop_shadow else ""
     align = "display:flex; justify-content:center;" if center else ""
     st.markdown(f"""
-    <div style="{align} margin-bottom:4px;">
-        <img src="data:image/png;base64,{b64}" width="{width}" height="{width}"
-             style="border-radius:50%; object-fit:cover; {shadow}" />
+    <div style="{align} margin-bottom:6px;">
+        <img src="data:image/png;base64,{b64}" style="max-width:{width}px; width:100%; height:auto; border-radius:50%; object-fit:cover; {shadow}" />
     </div>
     """, unsafe_allow_html=True)
