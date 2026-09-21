@@ -1,6 +1,6 @@
 """
 style.py — Central CSS for Streamlit App. Professional RTL layout with clean Cairo font everywhere.
-Mobile-Optimized for touchscreens and small viewports.
+Mobile-Optimized for touchscreens and small viewports with clean RTL heading alignments.
 """
 
 CSS = """
@@ -66,9 +66,10 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* STREAMLIT NATIVE HEADINGS FIX                                    */
+/* STREAMLIT NATIVE HEADINGS & ANCHOR FIX                           */
 /* ---------------------------------------------------------------- */
-div[data-testid="stHeadingWithHeadline"] {
+div[data-testid="stHeadingWithHeadline"],
+div[data-testid="stMarkdownContainer"] {
     direction: rtl !important;
     text-align: right !important;
 }
@@ -85,15 +86,19 @@ div[data-testid="stHeadingWithHeadline"] > h6 {
     align-items: center !important;
     gap: 8px !important;
     font-family: 'Cairo', sans-serif !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     color: var(--text-main);
     margin-top: 4px;
     margin-bottom: 8px;
+    text-align: right !important;
 }
 
-div[data-testid="stHeadingWithHeadline"] a {
-    order: 2 !important;
-    opacity: 0.3;
+/* Hide Streamlit anchor link icon (🔗) permanently across all headings */
+div[data-testid="stHeadingWithHeadline"] a,
+.stMarkdown a.anchor-link,
+[data-testid="stHeaderActionElements"] {
+    display: none !important;
+    visibility: hidden !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -104,7 +109,7 @@ div[data-testid="stHeadingWithHeadline"] a {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800 !important;
     font-family: 'Cairo', sans-serif !important;
     color: var(--primary-dark);
@@ -279,6 +284,20 @@ div[data-testid="stDataFrame"] {
 }
 
 /* ---------------------------------------------------------------- */
+/* HIDE "PRESS ENTER TO SUBMIT FORM" IN ALL INPUTS                  */
+/* ---------------------------------------------------------------- */
+div[data-testid="InputInstructions"],
+div[data-testid="stForm"] [data-aria-hidden="true"],
+div[data-testid="stForm"] small,
+div[aria-live="polite"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ---------------------------------------------------------------- */
 /* KPI CARDS SYSTEM                                                 */
 /* ---------------------------------------------------------------- */
 .kpi-card {
@@ -368,10 +387,9 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* RESPONSIVE MOBILE MEDIA QUERIES (Smartphone Layout Tweaks)       */
+/* RESPONSIVE MOBILE MEDIA QUERIES                                  */
 /* ---------------------------------------------------------------- */
 @media (max-width: 768px) {
-    /* Adjust Main Screen Padding */
     .block-container {
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
@@ -379,7 +397,6 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
         padding-bottom: 2rem !important;
     }
 
-    /* Stack Metrics and Columns Vertically */
     div[data-testid="column"] {
         width: 100% !important;
         flex: 1 1 100% !important;
@@ -387,16 +404,13 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
         margin-bottom: 8px !important;
     }
 
-    /* Text Adjustments */
     .section-title { font-size: 20px; gap: 6px; }
     .section-sub { font-size: 12px; margin-bottom: 12px; }
 
-    /* Touch Friendly Selects & Inputs */
     div[data-baseweb="select"] {
         min-height: 46px !important;
     }
 
-    /* Mobile Buttons */
     .stButton > button {
         width: 100% !important;
         font-size: 15px !important;
