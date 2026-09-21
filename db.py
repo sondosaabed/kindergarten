@@ -37,7 +37,7 @@ def get_connection():
 def init_db():
     """
     Ensures required PostgreSQL tables exist on startup.
-    Runs fast schema checks.
+    Runs fast schema checks and structural migrations.
     """
     conn = get_connection()
     with conn.cursor() as cur:
@@ -146,21 +146,27 @@ def init_db():
             );
 
             -- -------------------------------------------------------------
-            -- NEW: OPERATIONAL EXPENSES TABLE
+            -- OPERATIONAL EXPENSES TABLE (WITH PAYMENT STATUS & DEBT TRACKING)
             -- -------------------------------------------------------------
             CREATE TABLE IF NOT EXISTS expenses (
                 expense_id SERIAL PRIMARY KEY,
                 expense_date DATE DEFAULT CURRENT_DATE,
                 category VARCHAR(100) NOT NULL,
                 amount NUMERIC(10, 2) NOT NULL,
+                amount_paid NUMERIC(10, 2) DEFAULT 0.00,
+                payment_status VARCHAR(50) DEFAULT 'مدفوع بالكامل',
                 payment_method VARCHAR(50) DEFAULT 'كاش',
                 payee VARCHAR(150),
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- Migrations to ensure existing databases receive payment status columns
+            ALTER TABLE expenses ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(10, 2) DEFAULT 0.00;
+            ALTER TABLE expenses ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'مدفوع بالكامل';
+
             -- -------------------------------------------------------------
-            -- NEW: CAPITAL ASSETS & EQUIPMENT TABLE
+            -- CAPITAL ASSETS & EQUIPMENT TABLE
             -- -------------------------------------------------------------
             CREATE TABLE IF NOT EXISTS assets (
                 asset_id SERIAL PRIMARY KEY,
