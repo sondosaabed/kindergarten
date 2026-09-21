@@ -1,6 +1,6 @@
 """
 style.py — Central CSS for Streamlit App. Professional RTL layout with clean Cairo font everywhere.
-Mobile-Optimized for touchscreens and small viewports with clean RTL heading alignments.
+Fixed Header Alignments & Removed Form Instructions.
 """
 
 CSS = """
@@ -43,7 +43,7 @@ p, span, div, a, li, blockquote,
 h1, h2, h3, h4, h5, h6, 
 label, input, textarea, select, button,
 div[data-baseweb="select"], 
-.stMarkdown, .stMarkdown p, .section-title, .section-sub {
+.stMarkdown, .stMarkdown p {
     font-family: 'Cairo', sans-serif !important;
 }
 
@@ -66,12 +66,20 @@ html, body, [class*="css"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* STREAMLIT NATIVE HEADINGS & ANCHOR FIX                           */
+/* HEADINGS ALIGNMENT & HEADER FIXES                                */
 /* ---------------------------------------------------------------- */
-div[data-testid="stHeadingWithHeadline"],
-div[data-testid="stMarkdownContainer"] {
+/* Completely Hide Streamlit Anchor Link Icons next to Titles */
+div[data-testid="stHeadingWithHeadline"] a,
+.stMarkdown a.anchor-link,
+a[data-testid="stHeaderActionElements"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+div[data-testid="stHeadingWithHeadline"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 div[data-testid="stHeadingWithHeadline"] > h1,
@@ -82,48 +90,43 @@ div[data-testid="stHeadingWithHeadline"] > h5,
 div[data-testid="stHeadingWithHeadline"] > h6 {
     display: flex !important;
     flex-direction: row !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: center !important;
     gap: 8px !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: 800 !important;
-    color: var(--text-main);
+    color: var(--primary-dark) !important;
     margin-top: 4px;
     margin-bottom: 8px;
-    text-align: right !important;
-}
-
-/* Hide Streamlit anchor link icon (🔗) permanently across all headings */
-div[data-testid="stHeadingWithHeadline"] a,
-.stMarkdown a.anchor-link,
-[data-testid="stHeaderActionElements"] {
-    display: none !important;
-    visibility: hidden !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 /* ---------------------------------------------------------------- */
 /* SECTION TITLES & SUBTITLES IN CAIRO                              */
 /* ---------------------------------------------------------------- */
 .section-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 10px;
-    font-size: 26px;
+    font-size: 26px !important;
     font-weight: 800 !important;
     font-family: 'Cairo', sans-serif !important;
-    color: var(--primary-dark);
-    margin-bottom: 4px;
-    text-align: center;
+    color: var(--primary-dark) !important;
+    margin-bottom: 4px !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 .section-sub {
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    font-size: 14px;
+    color: var(--text-muted) !important;
+    margin-bottom: 20px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     font-family: 'Cairo', sans-serif !important;
-    text-align: center;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 /* ---------------------------------------------------------------- */
@@ -264,40 +267,6 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* CONTAINERS, DATAFRAMES & FORM ELEMENTS                           */
-/* ---------------------------------------------------------------- */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: var(--card-bg);
-    border-radius: 16px !important;
-    border: 1px solid var(--card-border) !important;
-    box-shadow: var(--shadow-sm);
-    padding: 12px;
-    margin-bottom: 14px;
-}
-
-div[data-testid="stDataFrame"] {
-    direction: rtl !important;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* ---------------------------------------------------------------- */
-/* HIDE "PRESS ENTER TO SUBMIT FORM" IN ALL INPUTS                  */
-/* ---------------------------------------------------------------- */
-div[data-testid="InputInstructions"],
-div[data-testid="stForm"] [data-aria-hidden="true"],
-div[data-testid="stForm"] small,
-div[aria-live="polite"] {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* ---------------------------------------------------------------- */
 /* KPI CARDS SYSTEM                                                 */
 /* ---------------------------------------------------------------- */
 .kpi-card {
@@ -357,7 +326,7 @@ div[aria-live="polite"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* FORMS & BUTTONS TOUCH TARGETS                                    */
+/* FORMS & HIDE FORM INSTRUCTIONS ("Press Enter to submit form")   */
 /* ---------------------------------------------------------------- */
 div[data-testid="stForm"] {
     background: #FFFFFF !important;
@@ -371,6 +340,23 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
     background-color: #F8FAFC !important;
     border: 1px solid #CBD5E1 !important;
     min-height: 44px !important;
+}
+
+/* Strictly Hide Streamlit's "Press Enter to submit form" Caption Across Browsers */
+div[data-testid="stForm"] [data-aria-hidden="true"],
+div[data-testid="stForm"] small,
+div[data-testid="InputInstructions"],
+div[data-testid="stInputInstruction"],
+.st-emotion-cache-12w0q1f,
+.st-emotion-cache-1y4p8pa,
+div[data-testid="stForm"] span:has-text("Press Enter"),
+div[data-testid="stForm"] div:has-text("Press Enter") {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .stButton > button {
@@ -387,7 +373,7 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* RESPONSIVE MOBILE MEDIA QUERIES                                  */
+/* MOBILE RESPONSIVENESS                                            */
 /* ---------------------------------------------------------------- */
 @media (max-width: 768px) {
     .block-container {
@@ -404,8 +390,8 @@ div[data-testid="stForm"] div[data-baseweb="input"] {
         margin-bottom: 8px !important;
     }
 
-    .section-title { font-size: 20px; gap: 6px; }
-    .section-sub { font-size: 12px; margin-bottom: 12px; }
+    .section-title { font-size: 20px !important; gap: 6px; }
+    .section-sub { font-size: 12px !important; margin-bottom: 12px !important; }
 
     div[data-baseweb="select"] {
         min-height: 46px !important;
