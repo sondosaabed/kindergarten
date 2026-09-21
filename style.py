@@ -163,45 +163,53 @@ button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* ---------------------------------------------------------------- */
-/* MODERN GLASSMORPHIC SIDEBAR STYLING & COLLAPSE FIX              */
+/* MODERN GLASSMORPHIC SIDEBAR STYLING & ULTIMATE COLLAPSE FIX     */
 /* ---------------------------------------------------------------- */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #064E3B 0%, #022C22 100%) !important;
     direction: RTL;
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.3s ease-in-out !important;
 }
 
-/* Collapse Fix: Hide all inner elements when collapsed */
+/* 1. Fully hide and collapse sidebar container off-screen in RTL mode */
+section[data-testid="stSidebar"][aria-expanded="false"],
 section[data-testid="stSidebar"][data-collapsed="true"],
-section[data-testid="stSidebar"][data-collapsed="true"] > div,
-section[data-testid="stSidebar"][data-collapsed="true"] [data-testid="stSidebarContent"],
-section[data-testid="stSidebar"][data-collapsed="true"] [data-testid="stSidebarUserContent"] {
+div[data-testid="stSidebarCollapsedControl"] + section[data-testid="stSidebar"] {
+    margin-right: -21rem !important;
     width: 0px !important;
     min-width: 0px !important;
     max-width: 0px !important;
     padding: 0px !important;
-    margin: 0px !important;
     overflow: hidden !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
 }
 
+/* 2. Hide all nested DOM nodes when sidebar is collapsed */
+section[data-testid="stSidebar"][aria-expanded="false"] *,
 section[data-testid="stSidebar"][data-collapsed="true"] * {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
+    height: 0px !important;
+    width: 0px !important;
+    max-height: 0px !important;
+    overflow: hidden !important;
 }
 
-/* Force expand/collapse arrow control button to remain visible */
+/* 3. Keep the expand toggle button cleanly visible */
 button[data-testid="stSidebarCollapseButton"],
 div[data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"],
-[data-testid="collapsedControl"] * {
+[data-testid="collapsedControl"] *,
+button[aria-label="Expand sidebar"],
+button[aria-label="Collapse sidebar"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
     z-index: 999999 !important;
+    position: relative !important;
 }
 
 /* Sidebar Text Color Fixes */
@@ -558,7 +566,7 @@ div[data-testid="stHeadingWithHeadline"] > h3,
 div[data-testid="stHeadingWithHeadline"] > h4,
 div[data-testid="stHeadingWithHeadline"] > h5,
 div[data-testid="stHeadingWithHeadline"] > h6 {
-    justify-content: flex-start !important; /* In RTL flex mode, flex-start puts the content on the right */
+    justify-content: flex-start !important;
     text-align: right !important;
     width: 100% !important;
 }
@@ -573,3 +581,9 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 .stDeployButton {display: none !important;}
 </style>
 """
+
+
+def apply_style():
+    """Injects custom CSS styling into the Streamlit application."""
+    import streamlit as st
+    st.markdown(CSS, unsafe_allow_html=True)
