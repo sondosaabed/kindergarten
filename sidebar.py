@@ -46,6 +46,33 @@ def render(conn):
     if "current_page" not in st.session_state:
         st.session_state.current_page = NAV_ITEMS[0][0]
 
+    # تنسيق CSS خاص لزيادة تناسق زر التنزيل مع الشريط الجانبي الداكن
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] div.stDownloadButton > button {
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #E2E8F0 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        text-align: right !important;
+        justify-content: flex-start !important;
+        padding: 10px 16px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        font-family: 'Cairo', sans-serif !important;
+        height: 44px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    section[data-testid="stSidebar"] div.stDownloadButton > button:hover {
+        background: rgba(255, 255, 255, 0.18) !important;
+        color: #FFFFFF !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     with st.sidebar:
         ui.render_logo(width=130)
 
@@ -81,7 +108,7 @@ def render(conn):
         st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
         st.markdown("---")
 
-        # --- Excel Comprehensive Backup Button ---
+        # --- Excel Comprehensive Backup Generation (Fixed for RealDictCursor) ---
         try:
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
@@ -97,12 +124,21 @@ def render(conn):
                     "الأصول": "assets",
                     "السنوات الدراسية": "academic_years",
                 }
+                
+                cur = conn.cursor()
                 for sheet_name, table_name in tables.items():
                     try:
-                        df = pd.read_sql(f"SELECT * FROM {table_name}", con=conn)
+                        cur.execute(f"SELECT * FROM {table_name}")
+                        rows = cur.fetchall()
+                        if rows:
+                            df = pd.DataFrame(rows)
+                        else:
+                            df = pd.DataFrame()
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
                     except Exception:
                         continue
+                cur.close()
+                
             output.seek(0)
             
             st.download_button(
