@@ -16,7 +16,7 @@ import sidebar
 
 from sections import (
     dashboard, parents, students,  teachers,
-    classes, academic_years, registration, payments, salaries, reports,
+    classes, academic_years, registration, payments, salaries, expenses, reports,
 )
 
 LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")
@@ -47,6 +47,7 @@ ROUTES = {
     "payments": payments.render,
     "salaries": salaries.render,
     "reports": reports.render,
+    "expenses": expenses.render
 }
 
 current_page = sidebar.render(conn)
