@@ -154,3 +154,21 @@ def format_money(amount):
         return f"{float(amount):,.2f}"
     except (TypeError, ValueError):
         return "0.00"
+
+
+def current_month_str():
+    """Returns current month in YYYY-MM format (e.g. 2026-09)."""
+    return datetime.now().strftime("%Y-%m-%d")[:7]
+
+def get_arabic_month_name(yyyy_mm):
+    """Converts '2026-09' to Arabic Month Name."""
+    try:
+        year, month = yyyy_mm.split("-")
+        months_ar = [
+            "كانون الثاني (1)", "شباط (2)", "آذار (3)", "نيسان (4)",
+            "أيار (5)", "حزيران (6)", "تموز (7)", "آب (8)",
+            "أيلول (9)", "تشرين الأول (10)", "تشرين الثاني (11)", "كانون الأول (12)"
+        ]
+        return f"{months_ar[int(month) - 1]} {year}"
+    except Exception:
+        return yyyy_mm
