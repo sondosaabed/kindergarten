@@ -22,7 +22,6 @@ NAV_ITEMS = [
 ]
 
 
-
 def _get_scalar(conn, query, params=()):
     """Executes a scalar query directly using a DB cursor safely."""
     try:
