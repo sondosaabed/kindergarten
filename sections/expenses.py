@@ -28,7 +28,7 @@ ASSET_CONDITIONS = ["ممتازة", "جيدة", "تحتاج صيانة", "تال
 def render(conn):
     ui.section_header("📦", "المصروفات والأصول", "إدارة المصروفات التشغيلية وشراء الألعاب والتجهيزات")
 
-    tab1, tab2, tab3 = st.tabs(["💰 المصروفات التشغيلية", "🧸 الأصول والألعاب", "📊 الملخص والتقارير"])
+    tab1, tab2 = st.tabs(["💰 المصروفات التشغيلية", "🧸 الأصول والألعاب"])
 
     # ------------------------------------------------------------------
     # TAB 1: OPERATIONAL EXPENSES
@@ -140,18 +140,3 @@ def render(conn):
                 ui.empty_state("لا توجد أصول أو ألعاب مسجلة حتى الآن.")
             else:
                 st.dataframe(df_assets, use_container_width=True, hide_index=True)
-
-    # ------------------------------------------------------------------
-    # TAB 3: FINANCIAL SUMMARY
-    # ------------------------------------------------------------------
-    with tab3:
-        df_exp_sum = ui.df(conn, "SELECT COALESCE(SUM(amount), 0) AS val FROM expenses")
-        df_ast_sum = ui.df(conn, "SELECT COALESCE(SUM(total_cost), 0) AS val FROM assets")
-
-        total_exp = float(df_exp_sum.iloc[0]['val']) if not df_exp_sum.empty else 0.0
-        total_assets = float(df_ast_sum.iloc[0]['val']) if not df_ast_sum.empty else 0.0
-
-        c1, c2, c3 = st.columns(3)
-        ui.kpi(c1, "💸", "إجمالي المصروفات التشغيلية", f"{total_exp:,.2f} ₪")
-        ui.kpi(c2, "🧩", "إجمالي الاستثمار في الأصول والألعاب", f"{total_assets:,.2f} ₪")
-        ui.kpi(c3, "📊", "المجموع الكلي للإنفاق", f"{(total_exp + total_assets):,.2f} ₪")
