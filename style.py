@@ -171,13 +171,20 @@ section[data-testid="stSidebar"] {
     border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Properly hide ALL inner content and force zero width when collapsed */
-section[data-testid="stSidebar"][data-collapsed="true"] {
+/* Collapse Fix: Hide all inner elements when collapsed */
+section[data-testid="stSidebar"][data-collapsed="true"],
+section[data-testid="stSidebar"][data-collapsed="true"] > div,
+section[data-testid="stSidebar"][data-collapsed="true"] [data-testid="stSidebarContent"],
+section[data-testid="stSidebar"][data-collapsed="true"] [data-testid="stSidebarUserContent"] {
+    width: 0px !important;
+    min-width: 0px !important;
+    max-width: 0px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    overflow: hidden !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    width: 0px !important;
-    min-width: 0px !important;
 }
 
 section[data-testid="stSidebar"][data-collapsed="true"] * {
@@ -186,7 +193,7 @@ section[data-testid="stSidebar"][data-collapsed="true"] * {
     opacity: 0 !important;
 }
 
-/* Ensure only the collapse/expand toggle button remains visible when collapsed */
+/* Force expand/collapse arrow control button to remain visible */
 button[data-testid="stSidebarCollapseButton"],
 div[data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"],
