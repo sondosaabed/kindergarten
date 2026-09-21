@@ -113,10 +113,11 @@ def render(conn):
     # SECTION 3: EXPENDITURES, LIABILITIES & ASSETS
     # ==================================================================
     st.markdown("##### 💸 المصروفات والأصول والالتزامات")
-    e1, e2, e3 = st.columns(3)
+    e1, e2, e3, e4 = st.columns(4)
     ui.kpi(e1, "💸", "المصروفات المدفوعة فعلياً", H.format_money(total_expenses_paid), bg="#FFF1F2", fg="#BE123C")
     ui.kpi(e2, "💳", "ديون الموردين والالتزامات (آجل)", H.format_money(total_supplier_debts), bg="#FFFBEB", fg="#B45309")
     ui.kpi(e3, "🧩", "استثمار الأصول والألعاب", H.format_money(total_assets), bg="#F0FDF4", fg="#15803D")
+    ui.kpi(e4, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
 
     st.markdown("---")
 
@@ -124,10 +125,9 @@ def render(conn):
     # SECTION 4: MONTHLY CASH FLOW HEALTH CHECK
     # ==================================================================
     st.markdown(f"##### 🗓️ الميزانية والسيولة التشغيلية لشهر ({current_month})")
-    p1, p2, p3 = st.columns(3)
+    p1, p2 = st.columns(3)
     ui.kpi(p1, "💵", "مقبوضات الطلاب (هذا الشهر)", H.format_money(monthly_student_income), bg="#E0F2FE", fg="#0369A1")
     ui.kpi(p2, "📦", "السيولة الخارجة (رواتب + مصروفات)", H.format_money(total_monthly_cash_outflow), bg="#FEF2F2", fg="#991B1B")
-    ui.kpi(p3, "📋", "استحقاق الرواتب الشهري", H.format_money(monthly_salaries_due), bg="#FFFBEB", fg="#B45309")
 
     # Income vs Outflow Cash Flow Alert
     net_monthly_margin = monthly_student_income - total_monthly_cash_outflow
