@@ -1,46 +1,11 @@
-"""
-db.py — Database initialization and connection management.
-Uses st.cache_resource to maintain a persistent connection to PostgreSQL/Supabase.
-"""
-
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import streamlit as st
-
-
-@st.cache_resource
-def get_connection():
-    """
-    Returns a cached PostgreSQL database connection.
-    st.cache_resource ensures the TCP connection to Supabase stays alive
-    and is reused across page reruns instead of reconnecting on every click.
-    """
-    if "postgres" in st.secrets:
-        conn = psycopg2.connect(
-            st.secrets["postgres"]["url"],
-            cursor_factory=RealDictCursor
-        )
-    else:
-        conn = psycopg2.connect(
-            host="YOUR_SUPABASE_HOST",
-            database="postgres",
-            user="postgres",
-            password="YOUR_PASSWORD",
-            port="5432",
-            cursor_factory=RealDictCursor
-        )
-    
-    conn.autocommit = True
-    return conn
-
-
 def init_db():
     """
     Ensures required PostgreSQL tables exist on startup.
-    Runs fast schema checks.
+    Runs individual schema checks to prevent batch execution syntax errors.
     """
     conn = get_connection()
     with conn.cursor() as cur:
+        # 1. Academic Years Table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS academic_years (
                 year_id VARCHAR(20) PRIMARY KEY,
@@ -48,7 +13,10 @@ def init_db():
                 end_date DATE,
                 cohort_name VARCHAR(100)
             );
+        """)
 
+        # 2. Teachers Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS teachers (
                 national_id VARCHAR(20) PRIMARY KEY,
                 full_name VARCHAR(100) NOT NULL,
@@ -60,7 +28,10 @@ def init_db():
                 degree VARCHAR(50),
                 specialization VARCHAR(100)
             );
+        """)
 
+        # 3. Classes Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS classes (
                 class_id SERIAL PRIMARY KEY,
                 class_type VARCHAR(50) NOT NULL,
@@ -69,7 +40,10 @@ def init_db():
                 teacher_id VARCHAR(20) REFERENCES teachers(national_id) ON DELETE SET NULL,
                 UNIQUE(class_type, section)
             );
+        """)
 
+        # 4. Parents Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS parents (
                 father_id VARCHAR(20) PRIMARY KEY,
                 mother_id VARCHAR(20),
@@ -92,7 +66,10 @@ def init_db():
                 marital_status VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
 
+        # 5. Students Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS students (
                 student_id VARCHAR(20) PRIMARY KEY,
                 full_name VARCHAR(100) NOT NULL,
@@ -106,7 +83,10 @@ def init_db():
                 father_id VARCHAR(20) REFERENCES parents(father_id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
 
+        # 6. Registrations Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS registrations (
                 registration_id SERIAL PRIMARY KEY,
                 student_id VARCHAR(20) REFERENCES students(student_id) ON DELETE CASCADE,
@@ -117,7 +97,10 @@ def init_db():
                 annual_tuition NUMERIC(10, 2) DEFAULT 3500.00,
                 UNIQUE(student_id, year_id)
             );
+        """)
 
+        # 7. Teacher Payments Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS teacher_payments (
                 payment_id SERIAL PRIMARY KEY,
                 national_id VARCHAR(20) REFERENCES teachers(national_id) ON DELETE CASCADE,
@@ -130,9 +113,10 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
 
-            -- FIX: Changed INTEGER PRIMARY KEY AUTOINCREMENT to SERIAL PRIMARY KEY
-            -- FIX: Changed TEXT dates to DATE and REAL values to NUMERIC(10,2) for exact precision
+        # 8. Operational Expenses Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS expenses (
                 id SERIAL PRIMARY KEY,
                 expense_date DATE NOT NULL,
@@ -143,7 +127,10 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
 
+        # 9. Capital Assets & Toys Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS assets (
                 id SERIAL PRIMARY KEY,
                 purchase_date DATE NOT NULL,
@@ -156,10 +143,16 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
 
+        # 10. Migration for tuition column
+        cur.execute("""
             ALTER TABLE registrations 
             ADD COLUMN IF NOT EXISTS annual_tuition NUMERIC(10, 2) DEFAULT 3500.00;
+        """)
 
+        # 11. Student Payments Table
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS payments (
                 receipt_number SERIAL PRIMARY KEY,
                 registration_id INT REFERENCES registrations(registration_id) ON DELETE CASCADE,
