@@ -1,15 +1,12 @@
 """
 sections/dashboard.py — لوحة التحكم (الرئيسية)
-
-Uses direct cursor evaluation for KPI values to prevent pandas DataFrame conversion errors.
-KPI cards are arranged in a 3x2 grid to prevent horizontal overflow when the sidebar opens.
-Custom Plotly charts replace raw st.bar_chart for emerald-themed visuals.
 """
 
 import streamlit as st
 import ui
 import helpers as H
 import plotly.express as px
+from datetime import datetime
 
 
 def _get_scalar(conn, query, params=()):
@@ -33,7 +30,9 @@ def _get_scalar(conn, query, params=()):
 
 
 def render(conn):
-    ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة")
+    ui.section_header("📊", "الرئيسية", "نظرة سريعة وشاملة على أداء الروضة والمالية")
+
+    current_month = datetime.now().strftime("%Y-%m")
 
     # Fetch KPI metrics directly
     total_students = int(_get_scalar(conn, "SELECT COUNT(*) FROM students"))
@@ -42,7 +41,7 @@ def render(conn):
     total_revenue = float(_get_scalar(conn, "SELECT COALESCE(SUM(amount), 0) FROM payments"))
     pending = int(_get_scalar(conn, "SELECT COUNT(*) FROM registrations WHERE status = %s", (H.STATUS_NEW,)))
 
-    # Dynamically calculated total outstanding using per-registration annual_tuition
+    # Dynamically calculated total outstanding tuition
     total_outstanding = float(_get_scalar(conn, """
         SELECT COALESCE(SUM(GREATEST(0, COALESCE(r.annual_tuition, 3500.0) - COALESCE(p.paid, 0))), 0)
         FROM registrations r
@@ -55,6 +54,21 @@ def render(conn):
         WHERE r.year_id = (SELECT year_id FROM academic_years ORDER BY start_date DESC LIMIT 1)
     """))
 
+    # Payroll & Monthly Cash Flow Indicators
+    monthly_salaries_due = float(_get_scalar(conn, "SELECT COALESCE(SUM(salary), 0) FROM teachers"))
+    
+    monthly_student_income = float(_get_scalar(conn, """
+        SELECT COALESCE(SUM(amount), 0) 
+        FROM payments 
+        WHERE TO_CHAR(payment_date::date, 'YYYY-MM') = %s
+    """, (current_month,)))
+
+    monthly_salaries_paid = float(_get_scalar(conn, """
+        SELECT COALESCE(SUM(amount), 0) 
+        FROM teacher_payments 
+        WHERE salary_month = %s
+    """, (current_month,)))
+
     # ------------------------------------------------------------------
     # KPI Grid Row 1: Key Operational Counts
     # ------------------------------------------------------------------
@@ -63,20 +77,46 @@ def render(conn):
     ui.kpi(r1_col2, "👩‍🏫", "المعلمون", total_teachers, bg="#F0F9FF", fg="#0284C7")
     ui.kpi(r1_col3, "🏷️", "الصفوف", total_classes, bg="#F5F3FF", fg="#7C3AED")
 
-    st.write("")  # Vertical spacer between rows
+    st.write("")
 
     # ------------------------------------------------------------------
     # KPI Grid Row 2: Financial Metrics & Pending Registrations
     # ------------------------------------------------------------------
     r2_col1, r2_col2, r2_col3 = st.columns(3)
-    ui.kpi(r2_col1, "💰", "إجمالي المقبوضات", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
+    ui.kpi(r2_col1, "💰", "إجمالي المقبوضات (الكلي)", H.format_money(total_revenue), bg="#ECFDF5", fg="#059669")
     ui.kpi(r2_col2, "⏳", "بانتظار التسجيل", pending, bg="#FEF3C7", fg="#D97706")
-    ui.kpi(r2_col3, "🧾", "إجمالي المتبقي", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
+    ui.kpi(r2_col3, "🧾", "إجمالي الديون المتبقية", H.format_money(total_outstanding), bg="#FFE4E6", fg="#E11D48")
 
     st.write("")
 
     # ------------------------------------------------------------------
-    # Charts Section (Styled with Emerald Theme via Plotly)
+    # KPI Grid Row 3: Monthly Payroll & Cash Flow Health Check
+    # ------------------------------------------------------------------
+    st.markdown(f"##### 🗓️ الميزانية التشغيلية لشهر ({current_month})")
+    p1, p2, p3 = st.columns(3)
+    ui.kpi(p1, "💵", "مقبوضات الطلاب (هذا الشهر)", H.format_money(monthly_student_income), bg="#E0F2FE", fg="#0369A1")
+    ui.kpi(p2, "📋", "إجمالي استحقاق الرواتب (شهرياً)", H.format_money(monthly_salaries_due), bg="#FEF2F2", fg="#991B1B")
+    ui.kpi(p3, "✅", "الرواتب المدفوعة (هذا الشهر)", H.format_money(monthly_salaries_paid), bg="#F0FDF4", fg="#166534")
+
+    # Income vs Salary Comparison Alert
+    net_monthly_margin = monthly_student_income - monthly_salaries_due
+    st.write("")
+    if monthly_student_income < monthly_salaries_due:
+        st.error(
+            f"⚠️ **تنبيه سيولة مالية:** تحصيلات الطلاب لهذا الشهر ({H.format_money(monthly_student_income)} شيكل) "
+            f"**أقل من** إجمالي رواتب المعلمات المطلوبة ({H.format_money(monthly_salaries_due)} شيكل) "
+            f"بعدجز قدره: **{H.format_money(abs(net_monthly_margin))} شيكل**."
+        )
+    else:
+        st.success(
+            f"✅ **السيولة المالية ممتازة:** دخل الطلاب لهذا الشهر يستوعب إجمالي الرواتب "
+            f"بفائض تشغيلي قدره **{H.format_money(net_monthly_margin)} شيكل**."
+        )
+
+    st.write("")
+
+    # ------------------------------------------------------------------
+    # Charts Section
     # ------------------------------------------------------------------
     left, right = st.columns([1.3, 1])
 
@@ -94,31 +134,11 @@ def render(conn):
                 ui.empty_state("لا توجد مقبوضات مسجلة بعد.")
             else:
                 rev_sorted = rev.sort_values("الشهر")
-                # Force "الشهر" to categorical string to prevent datetime microsecond axis parsing
                 rev_sorted["الشهر"] = rev_sorted["الشهر"].astype(str)
                 
-                fig_rev = px.bar(
-                    rev_sorted,
-                    x="الشهر",
-                    y="المبلغ",
-                    text_auto=True,
-                    height=280
-                )
-                fig_rev.update_traces(
-                    marker_color="#10B981",
-                    marker_line_color="#059669",
-                    marker_line_width=1.5,
-                    textposition="outside"
-                )
-                fig_rev.update_layout(
-                    xaxis_title="",
-                    yaxis_title="",
-                    xaxis=dict(type='category'),
-                    margin=dict(l=10, r=10, t=25, b=10),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Cairo", size=12)
-                )
+                fig_rev = px.bar(rev_sorted, x="الشهر", y="المبلغ", text_auto=True, height=280)
+                fig_rev.update_traces(marker_color="#10B981", marker_line_color="#059669", marker_line_width=1.5, textposition="outside")
+                fig_rev.update_layout(xaxis_title="", yaxis_title="", xaxis=dict(type='category'), margin=dict(l=10, r=10, t=25, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Cairo", size=12))
                 st.plotly_chart(fig_rev, use_container_width=True, config={"displayModeBar": False})
 
     with right:
@@ -135,56 +155,7 @@ def render(conn):
                 ui.empty_state("لا توجد صفوف بعد.")
             else:
                 dist["الصف"] = dist["الصف"].astype(str)
-                
-                fig_dist = px.bar(
-                    dist,
-                    x="الصف",
-                    y="العدد",
-                    text_auto=True,
-                    height=280
-                )
-                fig_dist.update_traces(
-                    marker_color="#0284C7",
-                    marker_line_color="#0369A1",
-                    marker_line_width=1.5,
-                    textposition="outside"
-                )
-                fig_dist.update_layout(
-                    xaxis_title="",
-                    yaxis_title="",
-                    xaxis=dict(type='category'),
-                    yaxis=dict(dtick=1), # Whole numbers only (prevents 0.2, 0.4 decimals)
-                    margin=dict(l=10, r=10, t=25, b=10),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Cairo", size=12)
-                )
+                fig_dist = px.bar(dist, x="الصف", y="العدد", text_auto=True, height=280)
+                fig_dist.update_traces(marker_color="#0284C7", marker_line_color="#0369A1", marker_line_width=1.5, textposition="outside")
+                fig_dist.update_layout(xaxis_title="", yaxis_title="", xaxis=dict(type='category'), yaxis=dict(dtick=1), margin=dict(l=10, r=10, t=25, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(family="Cairo", size=12))
                 st.plotly_chart(fig_dist, use_container_width=True, config={"displayModeBar": False})
-
-    # ------------------------------------------------------------------
-    # Recent Activity Table
-    # ------------------------------------------------------------------
-    with st.container(border=True):
-        st.markdown("##### 🕓 آخر عمليات التسجيل")
-        recent = ui.df(conn, """
-            SELECT s.full_name AS "اسم الطالب", (c.class_type || ' ' || c.section) AS "الصف",
-                   r.year_id AS "السنة الدراسية", r.status AS "الحالة"
-            FROM registrations r
-            JOIN students s ON s.student_id = r.student_id
-            JOIN classes c ON c.class_id = r.class_id
-            ORDER BY r.registration_id DESC LIMIT 8
-        """)
-        if recent.empty:
-            ui.empty_state("لا توجد تسجيلات بعد.")
-        else:
-            st.dataframe(
-                recent,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "الحالة": st.column_config.TextColumn(
-                        "الحالة",
-                        help="حالة الطالب الحالية"
-                    )
-                }
-            )
