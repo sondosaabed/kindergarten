@@ -180,4 +180,21 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- -------------------------------------------------------------
+            -- TEACHER ADVANCES TABLE
+            -- -------------------------------------------------------------
+            CREATE TABLE IF NOT EXISTS teacher_advances (
+                advance_id SERIAL PRIMARY KEY,
+                national_id VARCHAR(20) REFERENCES teachers(national_id) ON DELETE CASCADE,
+                amount NUMERIC(10, 2) NOT NULL,
+                advance_date DATE NOT NULL,
+                salary_month VARCHAR(7) NOT NULL,
+                is_deducted BOOLEAN DEFAULT FALSE,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Migration to ensure teacher_payments supports advance deductions
+            ALTER TABLE teacher_payments ADD COLUMN IF NOT EXISTS advance NUMERIC(10, 2) DEFAULT 0.00;
         """)
