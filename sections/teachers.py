@@ -3,6 +3,7 @@ sections/teachers.py — إدارة ملفات وبينات المعلمات
 """
 
 import streamlit as st
+import pandas as pd
 import ui
 
 
@@ -47,12 +48,11 @@ def render(conn):
 
     # ---------------------------------------- TAB 2: VIEW / EDIT / DELETE TEACHER --
     with tab_view:
-        teachers = ui.df(conn, "SELECT national_id, full_name, salary, mobile, address, hire_date FROM teachers ORDER BY full_name")
+        teachers = ui.df(conn, "SELECT * FROM teachers ORDER BY full_name")
         
         if teachers.empty:
             ui.empty_state("لا توجد معلمات مسجلات بعد.")
         else:
-            # Display Table of Teachers
             st.dataframe(teachers.rename(columns={
                 'national_id': 'رقم الهوية',
                 'full_name': 'الاسم',
@@ -81,11 +81,23 @@ def render(conn):
                 with st.form("edit_teacher_form"):
                     ec1, ec2 = st.columns(2)
                     e_name = ec1.text_input("الاسم الرباعي", value=t_row['full_name'])
-                    e_salary = ec2.number_input("الراتب الشهري الافتراضي (شيكل)", min_value=0.0, value=float(t_row['salary']), step=100.0)
+                    e_salary = ec2.number_input("الراتب الشهري الافتراضي (شيكل)", min_value=0.0, value=float(t_row['salary'] or 0), step=100.0)
 
                     ec3, ec4 = st.columns(2)
                     e_mobile = ec3.text_input("رقم الجوال", value=t_row['mobile'] or "")
-                    e_address = ec4.text_input("العنوان", value=t_row['address'] or "")
+                    
+                    try:
+                        curr_hire = pd.to_datetime(t_row['hire_date']).date() if t_row['hire_date'] else pd.Timestamp.today().date()
+                    except Exception:
+                        curr_hire = pd.Timestamp.today().date()
+                    e_hire = ec4.date_input("تاريخ التعيين", value=curr_hire)
+
+                    ec5, ec6 = st.columns(2)
+                    e_exp = ec5.number_input("سنوات الخبرة", min_value=0, value=int(t_row['experience_years'] or 0))
+                    e_degree = ec6.text_input("الدرجة العلمية", value=t_row['degree'] or "")
+
+                    e_spec = st.text_input("التخصص", value=t_row['specialization'] or "")
+                    e_address = st.text_input("العنوان", value=t_row['address'] or "")
 
                     b1, b2 = st.columns(2)
                     save_t = b1.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
@@ -95,9 +107,10 @@ def render(conn):
                         try:
                             cur = conn.cursor()
                             cur.execute("""
-                                UPDATE teachers SET full_name=%s, salary=%s, mobile=%s, address=%s
+                                UPDATE teachers 
+                                SET full_name=%s, salary=%s, mobile=%s, address=%s, hire_date=%s, experience_years=%s, degree=%s, specialization=%s
                                 WHERE national_id=%s
-                            """, (e_name, e_salary, e_mobile, e_address, t_id))
+                            """, (e_name, e_salary, e_mobile, e_address, str(e_hire), e_exp, e_degree, e_spec, t_id))
                             conn.commit()
                             cur.close()
                             st.success("✅ تم تحديث بيانات المعلمة بنجاح.")
