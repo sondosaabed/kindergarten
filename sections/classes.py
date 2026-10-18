@@ -101,7 +101,12 @@ def render(conn):
 
                 with st.expander(f"⚙️ تعديل بيانات: {row['label']}", expanded=True):
                     with st.form("edit_class_form"):
+                        c1, c2 = st.columns(2)
+                        e_type = c1.selectbox("نوع الصف", H.CLASS_TYPES, index=H.CLASS_TYPES.index(row['class_type']) if row['class_type'] in H.CLASS_TYPES else 0)
+                        e_sec = c2.selectbox("الشعبة", H.SECTIONS, index=H.SECTIONS.index(row['section']) if row['section'] in H.SECTIONS else 0)
+                        
                         e_name = st.text_input("اسم الصف", value=row['class_name'] or "")
+                        
                         current_teacher = row['teacher_name'] if pd.notna(row['teacher_name']) else "— بدون تعيين —"
                         idx = list(teacher_options.keys()).index(current_teacher) if current_teacher in teacher_options else 0
                         e_teacher = st.selectbox("المعلم/ة المسؤول/ة", list(teacher_options.keys()), index=idx)
@@ -113,8 +118,11 @@ def render(conn):
                         if save:
                             try:
                                 cur = conn.cursor()
-                                cur.execute("UPDATE classes SET class_name=%s, teacher_id=%s WHERE class_id=%s",
-                                            (e_name, teacher_options[e_teacher], cid))
+                                cur.execute("""
+                                    UPDATE classes 
+                                    SET class_type=%s, section=%s, class_name=%s, teacher_id=%s 
+                                    WHERE class_id=%s
+                                """, (e_type, e_sec, e_name, teacher_options[e_teacher], cid))
                                 conn.commit()
                                 cur.close()
                                 st.success("✅ تم الحفظ.")
