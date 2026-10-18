@@ -12,7 +12,6 @@ def render(conn):
 
     tab_add, tab_view = st.tabs(["➕ إضافة ولي أمر جديد", "📝 عرض / تعديل / حذف"])
 
-    # -------------------------------------------------- TAB 1: ADD PARENT --
     with tab_add:
         st.markdown("##### 📝 أدخل بيانات ولي الأمر الجديد")
 
@@ -83,25 +82,10 @@ def render(conn):
                         conn.rollback()
                         st.error(f"❌ حدث خطأ أثناء الحفظ (قد يكون رقم الهوية مسجلاً مسبقاً): {e}")
 
-    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
     with tab_view:
         search_term = st.text_input("🔍 ابحث بالاسم أو رقم الهوية", placeholder="اكتب اسم الأب، الأم، أو رقم الهوية...").strip()
 
-        query = """
-            SELECT 
-                father_id AS "هوية الأب",
-                father_name AS "اسم الأب",
-                mother_name AS "اسم الأم",
-                father_mobile AS "جوال الأب",
-                mother_mobile AS "جوال الأم",
-                landline AS "الهاتف الثابت",
-                address AS "العنوان",
-                marital_status AS "الحالة الاجتماعية",
-                father_job AS "مهنة الأب",
-                mother_job AS "وظيفة الأم",
-                mother_id AS "هوية الأم"
-            FROM parents
-        """
+        query = "SELECT * FROM parents"
         params = []
         if search_term:
             query += """ WHERE 
@@ -120,7 +104,12 @@ def render(conn):
         if df_parents.empty:
             ui.empty_state("لا توجد بيانات أولياء أمور مسجلة بعد.")
         else:
-            st.dataframe(df_parents, use_container_width=True, hide_index=True)
+            st.dataframe(df_parents[[
+                'father_id', 'father_name', 'mother_name', 'father_mobile', 'mother_mobile', 'address', 'marital_status'
+            ]].rename(columns={
+                'father_id': 'هوية الأب', 'father_name': 'اسم الأب', 'mother_name': 'اسم الأم',
+                'father_mobile': 'جوال الأب', 'mother_mobile': 'جوال الأم', 'address': 'العنوان', 'marital_status': 'الحالة الاجتماعية'
+            }), use_container_width=True, hide_index=True)
 
         st.markdown("---")
         st.markdown("##### ✏️ تعديل أو حذف ولي أمر")
@@ -155,36 +144,45 @@ def render(conn):
                 cur.close()
 
                 if p_data:
-                    def g(key, idx):
+                    def g(key):
                         if isinstance(p_data, dict):
                             return p_data.get(key) or ""
-                        return p_data[idx] if idx < len(p_data) and p_data[idx] is not None else ""
+                        return ""
 
-                    with st.expander(f"⚙️ تعديل بيانات: {g('father_name', 2)}", expanded=True):
+                    with st.expander(f"⚙️ تعديل بيانات: {g('father_name')}", expanded=True):
                         with st.form("edit_parent_form"):
+                            ef_id_input = st.text_input("رقم هوية الأب", value=g('father_id'))
+                            
                             col1, col2 = st.columns(2)
                             with col1:
-                                ef_name = st.text_input("اسم الأب", value=g('father_name', 2))
-                                ef_mob = st.text_input("جوال الأب", value=g('father_mobile', 14))
-                                ef_work_phone = st.text_input("هاتف عمل الأب", value=g('father_work_phone', 12))
-                                ef_job = st.text_input("مهنة الأب", value=g('father_job', 4))
+                                em_id = st.text_input("رقم هوية الأم", value=g('mother_id'))
+                                id_types = getattr(H, 'PARENT_ID_TYPES', [])
+                                curr_f_type = g('father_id_type')
+                                curr_m_type = g('mother_id_type')
+                                ef_id_type = st.selectbox("نوع هوية الأب", id_types, index=id_types.index(curr_f_type) if curr_f_type in id_types else 0)
+                                em_id_type = st.selectbox("نوع هوية الأم", id_types, index=id_types.index(curr_m_type) if curr_m_type in id_types else 0)
+                                
+                                ef_name = st.text_input("اسم الأب", value=g('father_name'))
+                                ef_mob = st.text_input("جوال الأب", value=g('father_mobile'))
+                                ef_work_phone = st.text_input("هاتف عمل الأب", value=g('father_work_phone'))
+                                ef_job = st.text_input("مهنة الأب", value=g('father_job'))
 
                             with col2:
-                                em_name = st.text_input("اسم الأم", value=g('mother_name', 3))
-                                em_mob = st.text_input("جوال الأم", value=g('mother_mobile', 15))
-                                em_work_phone = st.text_input("هاتف عمل الأم", value=g('mother_work_phone', 13))
-                                em_job = st.text_input("عمل الأم", value=g('mother_job', 5))
-                                em_work_type = st.text_input("طبيعة عمل الأم", value=g('mother_work_type', 6))
+                                em_name = st.text_input("اسم الأم", value=g('mother_name'))
+                                em_mob = st.text_input("جوال الأم", value=g('mother_mobile'))
+                                em_work_phone = st.text_input("هاتف عمل الأم", value=g('mother_work_phone'))
+                                em_job = st.text_input("عمل الأم", value=g('mother_job'))
+                                em_work_type = st.text_input("طبيعة عمل الأم", value=g('mother_work_type'))
 
                             c_ed1, c_ed2 = st.columns(2)
                             with c_ed1:
-                                e_marital = st.text_input("الحالة الاجتماعية", value=g('marital_status', 18))
-                                e_landline = st.text_input("الهاتف الثابت", value=g('landline', 10))
-                                e_refugee = st.text_input("حالة اللجوء", value=g('status_refugee', 11))
+                                e_marital = st.text_input("الحالة الاجتماعية", value=g('marital_status'))
+                                e_landline = st.text_input("الهاتف الثابت", value=g('landline'))
+                                e_refugee = st.text_input("حالة اللجوء", value=g('status_refugee'))
                             with c_ed2:
-                                e_addr = st.text_input("العنوان", value=g('address', 9))
-                                e_em_name = st.text_input("اسم شخص للطوارئ", value=g('emergency_contact_name', 16))
-                                e_em_phone = st.text_input("رقم هاتف الطوارئ", value=g('emergency_contact_phone', 17))
+                                e_addr = st.text_input("العنوان", value=g('address'))
+                                e_em_name = st.text_input("اسم شخص للطوارئ", value=g('emergency_contact_name'))
+                                e_em_phone = st.text_input("رقم هاتف الطوارئ", value=g('emergency_contact_phone'))
 
                             col_btn1, col_btn2 = st.columns(2)
                             with col_btn1:
@@ -196,12 +194,14 @@ def render(conn):
                                 cur = conn.cursor()
                                 cur.execute("""
                                     UPDATE parents SET 
+                                        father_id = %s, mother_id = %s, father_id_type = %s, mother_id_type = %s,
                                         father_name = %s, father_mobile = %s, father_work_phone = %s, father_job = %s,
                                         mother_name = %s, mother_mobile = %s, mother_work_phone = %s, mother_job = %s, mother_work_type = %s,
                                         marital_status = %s, landline = %s, status_refugee = %s, address = %s,
                                         emergency_contact_name = %s, emergency_contact_phone = %s
                                     WHERE father_id = %s
                                 """, (
+                                    ef_id_input, em_id, ef_id_type, em_id_type,
                                     ef_name, ef_mob, ef_work_phone, ef_job,
                                     em_name, em_mob, em_work_phone, em_job, em_work_type,
                                     e_marital, e_landline, e_refugee, e_addr,
