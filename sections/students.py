@@ -10,6 +10,7 @@ state that breaks every query after it), record pickers use
 the edit form lives in a collapsible expander.
 """
 
+
 import pandas as pd
 import streamlit as st
 
@@ -21,14 +22,12 @@ def render(conn):
     ui.section_header("🎒", "إدارة الطلاب", "إضافة وتعديل ومتابعة بيانات الأطفال")
 
     tab_add, tab_view = st.tabs(["➕ إضافة طالب جديد", "📋 عرض / تعديل / حذف"])
-
     parents_df = ui.df(conn, "SELECT father_id, father_name, mother_name FROM parents")
     parent_options = {
         f"{r.father_name} ({r.father_id}) — الأم: {r.mother_name}": r.father_id
         for r in parents_df.itertuples()
     }
 
-    # -------------------------------------------------- TAB 1: ADD STUDENT --
     with tab_add:
         if parents_df.empty:
             ui.empty_state("يجب إضافة ولي أمر واحد على الأقل قبل تسجيل طالب. انتقل إلى صفحة «أولياء الأمور».")
@@ -79,13 +78,11 @@ def render(conn):
                             except Exception as e:
                                 conn.rollback()
                                 st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
-
-    # ------------------------------------------- TAB 2: VIEW / EDIT / DELETE --
     with tab_view:
         students = ui.df(conn, """
-            SELECT s.student_id, s.full_name, s.birth_date, s.gender, s.id_type,
+            SELECT s.student_id, s.full_name, s.birth_date, s.birth_place, s.gender, s.id_type,
                    s.nationality, s.has_medical_condition, s.medical_details,
-                   s.father_id, p.father_name
+                   s.father_id, p.father_name, p.mother_name
             FROM students s JOIN parents p ON s.father_id = p.father_id
             ORDER BY s.created_at DESC
         """)
@@ -124,17 +121,25 @@ def render(conn):
 
                 with st.expander(f"⚙️ تعديل بيانات: {row['full_name']}", expanded=True):
                     with st.form("edit_student_form"):
+                        e_sid = st.text_input("رقم هوية الطالب", value=row['student_id'])
+                        
                         c1, c2, c3 = st.columns(3)
                         e_name = c1.text_input("اسم الطالب", value=row['full_name'])
                         e_bd = c2.date_input("تاريخ الميلاد", value=pd.to_datetime(row['birth_date']))
-                        e_gender = c3.selectbox("الجنس", H.GENDERS, index=H.GENDERS.index(row['gender']))
+                        e_gender = c3.selectbox("الجنس", H.GENDERS, index=H.GENDERS.index(row['gender']) if row['gender'] in H.GENDERS else 0)
 
-                        c4, c5 = st.columns(2)
-                        e_idtype = c4.selectbox(
+                        c4, c5, c6 = st.columns(3)
+                        e_bp = c4.text_input("مكان الميلاد", value=row['birth_place'] or "")
+                        e_idtype = c5.selectbox(
                             "نوع الهوية", H.STUDENT_ID_TYPES,
                             index=H.STUDENT_ID_TYPES.index(row['id_type']) if row['id_type'] in H.STUDENT_ID_TYPES else 0
                         )
-                        e_nat = c5.text_input("الجنسية", value=row['nationality'])
+                        e_nat = c6.text_input("الجنسية", value=row['nationality'])
+
+                        current_parent_label = f"{row['father_name']} ({row['father_id']}) — الأم: {row['mother_name']}"
+                        parent_keys = list(parent_options.keys())
+                        p_idx = parent_keys.index(current_parent_label) if current_parent_label in parent_keys else 0
+                        e_parent = st.selectbox("ولي الأمر", parent_keys, index=p_idx)
 
                         e_medical = st.checkbox("يوجد حالة طبية", value=bool(row['has_medical_condition']))
                         e_med_details = st.text_area("تفاصيل الحالة الطبية", value=row['medical_details'] or "")
@@ -147,11 +152,12 @@ def render(conn):
                             try:
                                 cur = conn.cursor()
                                 cur.execute('''
-                                    UPDATE students SET full_name=%s, birth_date=%s, gender=%s, id_type=%s,
-                                        nationality=%s, has_medical_condition=%s, medical_details=%s
+                                    UPDATE students 
+                                    SET student_id=%s, full_name=%s, birth_date=%s, birth_place=%s, gender=%s, id_type=%s,
+                                        nationality=%s, has_medical_condition=%s, medical_details=%s, father_id=%s
                                     WHERE student_id=%s
-                                ''', (e_name, str(e_bd), e_gender, e_idtype, e_nat,
-                                      1 if e_medical else 0, e_med_details, sid))
+                                ''', (e_sid, e_name, str(e_bd), e_bp, e_gender, e_idtype, e_nat,
+                                      1 if e_medical else 0, e_med_details, parent_options[e_parent], sid))
                                 conn.commit()
                                 cur.close()
                                 st.success("✅ تم حفظ التعديلات.")
