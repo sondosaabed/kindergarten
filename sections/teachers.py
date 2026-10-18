@@ -12,7 +12,6 @@ def render(conn):
 
     tab_add, tab_view = st.tabs(["➕ إضافة معلمة", "📋 قائمة المعلمات والتعديل"])
 
-    # -------------------------------------------------- TAB 1: ADD TEACHER --
     with tab_add:
         with st.form("add_teacher_form", clear_on_submit=True):
             c1, c2 = st.columns(2)
@@ -46,7 +45,6 @@ def render(conn):
                         conn.rollback()
                         st.error(f"❌ حدث خطأ أثناء الحفظ: {e}")
 
-    # ---------------------------------------- TAB 2: VIEW / EDIT / DELETE TEACHER --
     with tab_view:
         teachers = ui.df(conn, "SELECT * FROM teachers ORDER BY full_name")
         
@@ -79,6 +77,8 @@ def render(conn):
                 t_row = teachers[teachers['national_id'] == t_id].iloc[0]
 
                 with st.form("edit_teacher_form"):
+                    e_nid = st.text_input("رقم الهوية", value=t_row['national_id'])
+                    
                     ec1, ec2 = st.columns(2)
                     e_name = ec1.text_input("الاسم الرباعي", value=t_row['full_name'])
                     e_salary = ec2.number_input("الراتب الشهري الافتراضي (شيكل)", min_value=0.0, value=float(t_row['salary'] or 0), step=100.0)
@@ -108,9 +108,9 @@ def render(conn):
                             cur = conn.cursor()
                             cur.execute("""
                                 UPDATE teachers 
-                                SET full_name=%s, salary=%s, mobile=%s, address=%s, hire_date=%s, experience_years=%s, degree=%s, specialization=%s
+                                SET national_id=%s, full_name=%s, salary=%s, mobile=%s, address=%s, hire_date=%s, experience_years=%s, degree=%s, specialization=%s
                                 WHERE national_id=%s
-                            """, (e_name, e_salary, e_mobile, e_address, str(e_hire), e_exp, e_degree, e_spec, t_id))
+                            """, (e_nid, e_name, e_salary, e_mobile, e_address, str(e_hire), e_exp, e_degree, e_spec, t_id))
                             conn.commit()
                             cur.close()
                             st.success("✅ تم تحديث بيانات المعلمة بنجاح.")
