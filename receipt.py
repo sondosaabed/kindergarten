@@ -222,8 +222,8 @@ RECEIPT_TEMPLATE = """
                 <div class="letterhead">
                     {logo_img_tag}
                     <div class="letterhead-text">
-                        <div class="lh-ar">روضة مؤسسة شباب البيرة</div>
-                        <div class="lh-en">Al-Bireh Youth Foundation Kindergarten</div>
+                        <div class="lh-ar">روضة أحلام الطفولة</div>
+                        <div class="lh-en">Childhood Dreams Kindergarten</div>
                     </div>
                 </div>
                 <div class="receipt-header">
@@ -263,8 +263,8 @@ RECEIPT_TEMPLATE = """
                 <div class="letterhead">
                     {logo_img_tag}
                     <div class="letterhead-text">
-                        <div class="lh-ar">روضة مؤسسة شباب البيرة</div>
-                        <div class="lh-en">Al-Bireh Youth Foundation Kindergarten</div>
+                        <div class="lh-ar">روضة أحلام الطفولة</div>
+                        <div class="lh-en">Childhood Dreams Kindergarten</div>
                     </div>
                 </div>
                 <div class="receipt-header">

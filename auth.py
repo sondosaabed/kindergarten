@@ -39,8 +39,8 @@ def check_authentication():
             # Header HTML inside the form card
             st.markdown("""
             <div class="login-header">
-                <h2>روضة مؤسسة شباب البيرة</h2>
-                <p class="subtitle-en">Al-Bireh Youth Foundation Kindergarten</p>
+                <h2>روضة أحلام الطفولة</h2>
+                <p class="subtitle-en">Childhood Dreams Kindergarten</p>
                 <div class="login-badge-wrapper">
                     <span class="login-badge">تسجيل دخول المديرة 🔐</span>
                 </div>

@@ -205,8 +205,8 @@ def _render_printable_report_pdf(
             <div class="header-brand">
                 {logo_img_tag}
                 <div class="brand-titles">
-                    <div class="ar">روضة مؤسسة شباب البيرة</div>
-                    <div class="en">Al-Bireh Youth Foundation Kindergarten</div>
+                    <div class="ar">روضة أحلام الطفولة</div>
+                    <div class="en">Childhood Dreams Kindergarten</div>
                 </div>
             </div>
             <div class="report-meta">
