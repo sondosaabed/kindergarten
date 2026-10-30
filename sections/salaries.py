@@ -34,12 +34,13 @@ def render(conn):
         with st.form("disburse_salary_form"):
             col1, col2, col3 = st.columns(3)
             salary_month = col1.text_input("عن شهر (YYYY-MM) *", value=current_month)
-            base_salary = col2.number_input("الراتب الأساسي (شيكل)", min_value=0.0, value=default_salary, step=50.0)
-            bonus = col3.number_input("مكافأة / إضافي (شيكل)", min_value=0.0, value=0.0, step=50.0)
+            payment_date = col2.date_input("تاريخ الصرف *", value=datetime.today())
+            base_salary = col3.number_input("الراتب الأساسي (شيكل)", min_value=0.0, value=default_salary, step=50.0)
 
-            col4, col5 = st.columns(2)
-            deductions = col4.number_input("خصومات (شيكل)", min_value=0.0, value=0.0, step=50.0)
-            notes = col5.text_input("ملاحظات إضافية (اختياري)")
+            col4, col5, col6 = st.columns(3)
+            bonus = col4.number_input("مكافأة / إضافي (شيكل)", min_value=0.0, value=0.0, step=50.0)
+            deductions = col5.number_input("خصومات (شيكل)", min_value=0.0, value=0.0, step=50.0)
+            notes = col6.text_input("ملاحظات إضافية (اختياري)")
 
             net_salary = max(0.0, base_salary + bonus - deductions)
             st.info(f"💵 **صافي الراتب المستحق للصرف:** {H.format_money(net_salary)} شيكل")
@@ -47,14 +48,14 @@ def render(conn):
             pay_submitted = st.form_submit_button("🧾 تسجيل الصرف وطباعة قسيمة الراتب", type="primary", use_container_width=True)
 
         if pay_submitted:
-            today = H.today_str()
+            p_date_str = payment_date.strftime("%Y-%m-%d")
             try:
                 cur = conn.cursor()
                 cur.execute("""
                     INSERT INTO teacher_payments (national_id, amount, payment_date, salary_month, base_salary, bonus, deductions, notes)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING payment_id
-                """, (t_id, net_salary, today, salary_month, base_salary, bonus, deductions, notes))
+                """, (t_id, net_salary, p_date_str, salary_month, base_salary, bonus, deductions, notes))
                 payment_id = cur.fetchone()['payment_id']
                 conn.commit()
                 cur.close()
@@ -65,7 +66,7 @@ def render(conn):
                     payment_id=payment_id,
                     teacher_name=t_name,
                     national_id=t_id,
-                    payment_date=today,
+                    payment_date=p_date_str,
                     salary_month=salary_month,
                     base_salary=base_salary,
                     bonus=bonus,
@@ -142,17 +143,32 @@ def render(conn):
                         notes=sal_row['ملاحظات'] or ""
                     )
 
-                # ✏️ Edit & Delete Form
+                # ✏️ Edit & Delete Form (Allows editing ALL fields)
                 with st.expander(f"✏️ تعديل بيانات القسيمة #{p_id}", expanded=False):
                     with st.form("edit_salary_form"):
-                        ec1, ec2, ec3 = st.columns(3)
-                        e_month = ec1.text_input("عن شهر", value=sal_row['عن شهر'])
-                        e_base = ec2.number_input("الراتب الأساسي", min_value=0.0, value=float(sal_row['الأساسي']), step=50.0)
-                        e_bonus = ec3.number_input("المكافأة", min_value=0.0, value=float(sal_row['المكافأة']), step=50.0)
+                        # Fetch teachers list for editing the teacher if needed
+                        all_teachers_df = ui.df(conn, "SELECT national_id, full_name FROM teachers ORDER BY full_name")
+                        t_edit_map = {f"{r.full_name} ({r.national_id})": r.national_id for r in all_teachers_df.itertuples()}
+                        
+                        # Find current teacher label index
+                        current_t_label = next((k for k, v in t_edit_map.items() if v == sal_row['national_id']), list(t_edit_map.keys())[0])
 
-                        ec4, ec5 = st.columns(2)
-                        e_deductions = ec4.number_input("الخصومات", min_value=0.0, value=float(sal_row['الخصم']), step=50.0)
-                        e_notes = ec5.text_input("ملاحظات", value=sal_row['ملاحظات'] or "")
+                        ec0, ec1, ec2 = st.columns(3)
+                        e_teacher_label = ec0.selectbox("المعلمة *", list(t_edit_map.keys()), index=list(t_edit_map.keys()).index(current_t_label))
+                        e_new_t_id = t_edit_map[e_teacher_label]
+                        
+                        e_month = ec1.text_input("عن شهر *", value=sal_row['عن شهر'])
+                        
+                        # Parse existing payment date safely
+                        existing_date = datetime.strptime(str(sal_row['تاريخ الصرف']), "%Y-%m-%d").date() if sal_row['تاريخ الصرف'] else datetime.today().date()
+                        e_payment_date = ec2.date_input("تاريخ الصرف *", value=existing_date)
+
+                        ec3, ec4, ec5 = st.columns(3)
+                        e_base = ec3.number_input("الراتب الأساسي", min_value=0.0, value=float(sal_row['الأساسي']), step=50.0)
+                        e_bonus = ec4.number_input("المكافأة", min_value=0.0, value=float(sal_row['المكافأة']), step=50.0)
+                        e_deductions = ec5.number_input("الخصومات", min_value=0.0, value=float(sal_row['الخصم']), step=50.0)
+
+                        e_notes = st.text_input("ملاحظات", value=sal_row['ملاحظات'] or "")
 
                         e_net = max(0.0, e_base + e_bonus - e_deductions)
                         st.caption(f"💡 صافي الراتب الجديد بعد التعديل: **{H.format_money(e_net)} شيكل**")
@@ -162,13 +178,14 @@ def render(conn):
                         delete_sal = btn2.form_submit_button("🗑️ حذف قسيمة الراتب", use_container_width=True)
 
                         if save_edit:
+                            e_date_str = e_payment_date.strftime("%Y-%m-%d")
                             try:
                                 cur = conn.cursor()
                                 cur.execute("""
                                     UPDATE teacher_payments 
-                                    SET salary_month=%s, base_salary=%s, bonus=%s, deductions=%s, amount=%s, notes=%s
+                                    SET national_id=%s, salary_month=%s, payment_date=%s, base_salary=%s, bonus=%s, deductions=%s, amount=%s, notes=%s
                                     WHERE payment_id=%s
-                                """, (e_month, e_base, e_bonus, e_deductions, e_net, e_notes, p_id))
+                                """, (e_new_t_id, e_month, e_date_str, e_base, e_bonus, e_deductions, e_net, e_notes, p_id))
                                 conn.commit()
                                 cur.close()
                                 st.success("✅ تم حفظ التعديلات وإعادة حساب الراتب الصافي بنجاح!")
