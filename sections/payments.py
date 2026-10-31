@@ -8,6 +8,7 @@ any historical payment receipt.
 """
 
 import streamlit as st
+import datetime
 
 import ui
 import helpers as H
@@ -166,19 +167,34 @@ def render(conn):
                         reason_other=row['تفاصيل أخرى'] or "",
                     )
 
-                # ✏️ Edit & Delete Expander
+                # ✏️ Edit & Delete Expander (Now includes Payment Date editing)
                 with st.expander(f"✏️ تعديل بيانات الوصل #{receipt_no}", expanded=False):
                     with st.form("edit_payment_form"):
                         c1, c2 = st.columns(2)
                         e_amount = c1.number_input("المبلغ", min_value=0.0, value=float(row['المبلغ']), step=10.0)
-                        e_payer = c2.text_input("اسم الدافع", value=row['الدافع'])
                         
+                        # Parse existing date safely for date_input
+                        existing_date = row['التاريخ']
+                        if isinstance(existing_date, str):
+                            try:
+                                parsed_date = datetime.date.fromisoformat(existing_date)
+                            except ValueError:
+                                parsed_date = datetime.date.today()
+                        elif isinstance(existing_date, datetime.date):
+                            parsed_date = existing_date
+                        else:
+                            parsed_date = datetime.date.today()
+
+                        e_date = c2.date_input("تاريخ الدفع", value=parsed_date)
+
                         c3, c4 = st.columns(2)
-                        e_reason = c3.selectbox(
+                        e_payer = c3.text_input("اسم الدافع", value=row['الدافع'])
+                        e_reason = c4.selectbox(
                             "مقابل", H.PAYMENT_FOR,
                             index=H.PAYMENT_FOR.index(row['مقابل']) if row['مقابل'] in H.PAYMENT_FOR else 0
                         )
-                        e_other = c4.text_input("تفاصيل أخرى", value=row['تفاصيل أخرى'] or "")
+                        
+                        e_other = st.text_input("تفاصيل أخرى", value=row['تفاصيل أخرى'] or "")
 
                         b1, b2 = st.columns(2)
                         save = b1.form_submit_button("💾 حفظ التعديلات", type="primary", use_container_width=True)
@@ -188,13 +204,14 @@ def render(conn):
                             try:
                                 cur = conn.cursor()
                                 cur.execute('''
-                                    UPDATE payments SET amount=%s, payer_name=%s, payment_for=%s, payment_for_other=%s
-                                    WHERE receipt_number=%s
-                                ''', (e_amount, e_payer, e_reason, e_other, receipt_no))
+                                    UPDATE payments 
+                                    SET amount = %s, payment_date = %s, payer_name = %s, payment_for = %s, payment_for_other = %s
+                                    WHERE receipt_number = %s
+                                ''', (e_amount, e_date, e_payer, e_reason, e_other, receipt_no))
                                 conn.commit()
                                 cur.close()
                                 H.refresh_registration_status(conn, reg_id_sel)
-                                st.success("✅ تم حفظ التعديلات.")
+                                st.success("✅ تم حفظ التعديلات بنجاح.")
                                 st.rerun()
                             except Exception as e:
                                 conn.rollback()
