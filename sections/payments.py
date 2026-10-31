@@ -67,19 +67,19 @@ def render(conn):
         i3.metric("المتبقي", f"{H.format_money(remaining_before)}")
 
         with st.form("add_payment_form"):
-            c1, c2 = st.columns(2)
+            c1, c2, c3 = st.columns(3)
             amount = c1.number_input("المبلغ المدفوع (كاش) *", min_value=1.0, value=100.0, step=10.0)
-            payer = c2.text_input("اسم الدافع (ولي الأمر) *", value=selected_row['father_name'])
+            payment_date = c2.date_input("تاريخ الدفع *", value=datetime.date.today())
+            payer = c3.text_input("اسم الدافع (ولي الأمر) *", value=selected_row['father_name'])
 
-            c3, c4 = st.columns(2)
-            reason = c3.selectbox("مقابل *", H.PAYMENT_FOR)
-            reason_other = c4.text_input("تفاصيل أخرى") if reason == "آخر" else ""
+            c4, c5 = st.columns(2)
+            reason = c4.selectbox("مقابل *", H.PAYMENT_FOR)
+            reason_other = c5.text_input("تفاصيل أخرى") if reason == "آخر" else ""
 
             submitted = st.form_submit_button("🧾 حفظ الدفعة وطباعة الوصل", type="primary", use_container_width=True)
 
         if submitted:
             reg_id = int(selected_row['registration_id'])
-            today = H.today_str()
             try:
                 cur = conn.cursor()
                 cur.execute('''
@@ -87,7 +87,7 @@ def render(conn):
                         payer_name, payment_for, payment_for_other)
                     VALUES (%s, %s, %s, 'كاش', %s, %s, %s)
                     RETURNING receipt_number
-                ''', (reg_id, amount, today, payer, reason, reason_other))
+                ''', (reg_id, amount, payment_date, payer, reason, reason_other))
                 receipt_id = cur.fetchone()['receipt_number']
                 conn.commit()
                 cur.close()
@@ -102,7 +102,7 @@ def render(conn):
 
                 receipt.render_receipt(
                     receipt_id=receipt_id,
-                    date=today,
+                    date=str(payment_date),
                     student_name=selected_row['student_name'],
                     payer=payer,
                     amount=H.format_money(amount),
@@ -167,13 +167,12 @@ def render(conn):
                         reason_other=row['تفاصيل أخرى'] or "",
                     )
 
-                # ✏️ Edit & Delete Expander (Now includes Payment Date editing)
+                # ✏️ Edit & Delete Expander
                 with st.expander(f"✏️ تعديل بيانات الوصل #{receipt_no}", expanded=False):
                     with st.form("edit_payment_form"):
                         c1, c2 = st.columns(2)
                         e_amount = c1.number_input("المبلغ", min_value=0.0, value=float(row['المبلغ']), step=10.0)
                         
-                        # Parse existing date safely for date_input
                         existing_date = row['التاريخ']
                         if isinstance(existing_date, str):
                             try:
